@@ -1,6 +1,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
+const SUPABASE_URL = "https://SEU-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "SUA-PUBLIC-ANON-KEY";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const firebaseConfig = {
   apiKey: "AIzaSyBsiC8RaCd-6bwuThixa1ZxFkK4JhHgfjk",
@@ -94,7 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Enviar para o backend
           try {
-            const response = await fetch('/api/cadastro/login/google', {
+            const API_URL = window.API_CONFIG?.CADASTRO || 'http://localhost:3000/api/cadastro';
+            const response = await fetch(`${API_URL}/login/google`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -227,7 +234,8 @@ async function handleFormSubmit(event) {
 
   try {
     // Enviar dados para o backend
-    const response = await fetch('/api/auth/register', {
+    const API_URL = window.API_CONFIG?.AUTH || 'http://localhost:3000/api/auth';
+    const response = await fetch(`${API_URL}/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

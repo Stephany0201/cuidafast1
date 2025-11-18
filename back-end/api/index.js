@@ -39,7 +39,7 @@ app.use('/api/notificacoes', notificationRoutes);
 app.use('/api/tokens', tokenRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
-app.get('/api/teste', (req, res) => res.json({ ok: true, mensagem: 'API funcionando corretamente!' }));
+app.get('/api/teste', (req, res) => res.json({ ok: true }));
 
 // Listagem de rotas (seguro)
 if (app._router && app._router.stack) {

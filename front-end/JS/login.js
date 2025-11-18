@@ -164,7 +164,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Tentar autenticar com o backend
         try {
-          const response = await fetch('/api/cadastro/login/google', {
+          const API_URL = window.API_CONFIG?.CADASTRO || 'http://localhost:3000/api/cadastro';
+          const response = await fetch(`${API_URL}/login/google`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
