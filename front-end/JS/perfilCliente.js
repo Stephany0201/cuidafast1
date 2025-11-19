@@ -196,10 +196,93 @@ function initEditButtons() {
 /**
  * Inicializa botão de editar avatar
  */
-const editAvatarBtn = document.querySelector('.edit-avatar-btn');
-if (editAvatarBtn) {
+function initEditAvatar() {
+    const editAvatarBtn = document.querySelector('.edit-avatar-btn');
+    const avatarImg = document.querySelector('.avatar-img');
+    
+    if (!editAvatarBtn || !avatarImg) return;
+
     editAvatarBtn.addEventListener('click', function() {
-        alert('Funcionalidade de upload de foto em desenvolvimento');
-        // Aqui você pode implementar upload de imagem
+        // Criar input file dinamicamente
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+        
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validar tamanho (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Arquivo muito grande. Tamanho máximo: 5MB');
+                return;
+            }
+
+            // Validar tipo
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor, selecione uma imagem válida.');
+                return;
+            }
+
+            // Ler e atualizar foto
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const photoURL = event.target.result;
+                
+                // Atualizar imagem
+                avatarImg.src = photoURL;
+                
+                // Atualizar todas as imagens de avatar na página
+                const allAvatars = document.querySelectorAll('.user-avatar-img, .dropdown-avatar');
+                allAvatars.forEach(img => {
+                    img.src = photoURL;
+                });
+
+                // Atualizar no localStorage
+                const userData = getUserDataFromStorage();
+                if (userData) {
+                    userData.photoURL = photoURL;
+                    localStorage.setItem('cuidafast_user', JSON.stringify(userData));
+                    
+                    // Atualizar também na lista de usuários
+                    const usuarios = localStorage.getItem('cuidafast_usuarios');
+                    if (usuarios) {
+                        const listaUsuarios = JSON.parse(usuarios);
+                        const index = listaUsuarios.findIndex(u => u.email === userData.email);
+                        if (index !== -1) {
+                            listaUsuarios[index].photoURL = photoURL;
+                            localStorage.setItem('cuidafast_usuarios', JSON.stringify(listaUsuarios));
+                        }
+                    }
+
+                    // Atualizar no backend se tiver API
+                    if (typeof PerfilAPI !== 'undefined' && userData.id) {
+                        PerfilAPI.atualizarFotoPerfil(userData.id, photoURL)
+                            .then(() => {
+                                console.log('[PerfilCliente] Foto atualizada no backend');
+                            })
+                            .catch(error => {
+                                console.error('[PerfilCliente] Erro ao atualizar foto no backend:', error);
+                            });
+                    }
+
+                    alert('✅ Foto de perfil atualizada com sucesso!');
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Disparar click no input
+        document.body.appendChild(input);
+        input.click();
+        document.body.removeChild(input);
     });
+}
+
+// Inicializar quando o DOM estiver pronto
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initEditAvatar);
+} else {
+    initEditAvatar();
 }
