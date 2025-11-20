@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="../CSS/styles.css">
     <link rel="stylesheet" href="../CSS/header.css">
     <link rel="stylesheet" href="../CSS/pages/configuracao.css">
+    link rel="stylesheet" href="../CSS/theme.css">
 </head>
 <body class="client-home">
         <!-- Pop-up de confirmação de logout -->
@@ -179,24 +180,51 @@
                             <i class="ph ph-caret-right option-arrow"></i>
                         </a>
                     </li>
-        
-                </ul>
-                
-                <div class="settings-divider"></div>
-                
-                <ul class="settings-options">
-                    <li>
-                        <a href="#" class="settings-option logout-option" id="logoutBtn">
-                            <div class="option-icon">
-                                <i class="ph ph-sign-out"></i>
-                            </div>
-                            <div class="option-details">
-                                <h3>Sair da conta</h3>
-                                <p>Encerre sua sessão atual</p>
-                            </div>
-                            <i class="ph ph-caret-right option-arrow"></i>
-                        </a>
-                    </li>
+<li>
+  <a class="settings-option color-option" id="colormode">
+    <div class="option-icon">
+      <i class="ph ph-sun" id="themeIcon"></i>
+    </div>
+
+    <div class="option-details">
+      <h3 id="themeTitle">Modo claro</h3>
+      <p>Alterna entre o modo escuro e claro</p>
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" id="themeToggle">
+      <span class="slider"></span>
+    </label>
+  </a>
+</li>
+<script>  const toggle = document.getElementById("themeToggle");
+  const icon = document.getElementById("themeIcon");
+  const title = document.getElementById("themeTitle");
+
+  // Aplicar tema salvo caso exista
+  if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark-mode");
+    toggle.checked = true;
+    icon.classList.replace("ph-sun", "ph-moon");
+    title.textContent = "Modo escuro";
+  }
+
+  // Alternar tema
+  toggle.addEventListener("change", () => {
+    document.body.classList.toggle("dark-mode");
+
+    if (document.body.classList.contains("dark-mode")) {
+      icon.classList.replace("ph-sun", "ph-moon");
+      title.textContent = "Modo escuro";
+      localStorage.setItem("theme", "dark");
+    } else {
+      icon.classList.replace("ph-moon", "ph-sun");
+      title.textContent = "Modo claro";
+      localStorage.setItem("theme", "light");
+    }
+  });
+</script>
+
                     <li>
                         <a href="#" class="settings-option delete-option" id="deleteAccount">
                             <div class="option-icon">
@@ -319,6 +347,5 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../JS/header.js"></script>
-<script src="../JS/theme.js"></script>
 
 </body>

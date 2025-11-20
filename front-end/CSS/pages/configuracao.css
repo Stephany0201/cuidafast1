@@ -1,4 +1,4 @@
-/* Configurações da Página */
+/* ===== TEMAS GLOBAIS ===== */
 :root {
   --creme: #FFFBEC;
   --creme-claro: #FFFBED;
@@ -14,6 +14,8 @@
   --vermelho: #FF6B6B;
   --sombra: 0 4px 12px rgba(0, 0, 0, 0.08);
   --transicao: all 0.3s ease;
+    --background: #ffffff;
+  --texto: #1B475D;
 }
 
 /* Body background removed - using main.css global styles */
@@ -574,4 +576,58 @@ body {
   background: transparent !important;
   box-shadow: none !important;
   transform: none !important;
+}
+/* SWITCH MODE */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Slider visual */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 34px;
+  transition: .3s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: .3s;
+}
+
+input:checked + .slider {
+  background-color: var(--azul-escuro);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+#themeIcon {
+  transition: transform 0.3s ease;
+}
+.dark-mode #themeIcon {
+  transform: rotate(180deg);
 }
