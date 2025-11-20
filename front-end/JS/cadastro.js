@@ -3,8 +3,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstati
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
-const SUPABASE_URL = "https://SEU-PROJECT.supabase.co";
-const SUPABASE_ANON_KEY = "SUA-PUBLIC-ANON-KEY";
+const SUPABASE_URL = "https://kgwepkcxmsoyebxczqwe.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtnd2Vwa2N4bXNveWVieGN6cXdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyNDgxMjEsImV4cCI6MjA3NjgyNDEyMX0.26hZ-Az3bhtOpgDKz2auih183u7ZdZD_R3GCHH-REuU";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

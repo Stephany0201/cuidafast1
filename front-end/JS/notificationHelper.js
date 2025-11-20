@@ -31,9 +31,6 @@ async function notificarUsuario(userId, title, body) {
   }
 }
 
-/**
- * Enviar notificação para todos os usuários
- */
 async function notificarTodos(title, body) {
   try {
     const response = await fetch(`${NOTIFICATION_API}/enviar`, {
