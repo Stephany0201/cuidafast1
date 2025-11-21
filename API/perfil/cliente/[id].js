@@ -1,4 +1,4 @@
-import { getPerfilCliente } from '../../back-end/api/controllers/perfilController';
+import { getPerfilCliente } from '../../../back-end/api/controllers/perfilController';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
