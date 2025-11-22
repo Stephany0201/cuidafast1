@@ -165,64 +165,13 @@
                     <input type="text" placeholder="Buscar contatos..." id="search-input">
                 </div>
                 <ul class="contact-list" id="contact-list">
-                    <li class="contact-item active" data-contact-id="1">
-                        <div class="contact-avatar">
-                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%23FAD564'/%3E%3Ctext x='25' y='30' text-anchor='middle' font-family='Arial' font-size='18' fill='%231B475D'%3EG%3C/text%3E%3C/svg%3E" alt="Avatar Giovanna">
-                        </div>
-                        <div class="contact-info">
-                            <span class="contact-name">Giovanna</span>
-                            <span class="contact-role">Cuidadora de Idosos</span>
-                        </div>
-                        <div class="unread-count">1</div>
-                    </li>
-                    <li class="contact-item" data-contact-id="2">
-                        <div class="contact-avatar">
-                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%23FAD564'/%3E%3Ctext x='25' y='30' text-anchor='middle' font-family='Arial' font-size='18' fill='%231B475D'%3ES%3C/text%3E%3C/svg%3E" alt="Avatar Sueli">
-                        </div>
-                        <div class="contact-info">
-                            <span class="contact-name">Sueli</span>
-                            <span class="contact-role">Pet Walker</span>
-                        </div>
-                    </li>
-                    <li class="contact-item" data-contact-id="3">
-                        <div class="contact-avatar">
-                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%23FAD564'/%3E%3Ctext x='25' y='30' text-anchor='middle' font-family='Arial' font-size='18' fill='%231B475D'%3EK%3C/text%3E%3C/svg%3E" alt="Avatar Kleber">
-                        </div>
-                        <div class="contact-info">
-                            <span class="contact-name">Kleber</span>
-                            <span class="contact-role">Cuidador de Idoso</span>
-                        </div>
-                        <div class="unread-count">2</div>
-                    </li>
-                    <li class="contact-item" data-contact-id="4">
-                        <div class="contact-avatar">
-                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%23FAD564'/%3E%3Ctext x='25' y='30' text-anchor='middle' font-family='Arial' font-size='18' fill='%231B475D'%3EJ%3C/text%3E%3C/svg%3E" alt="Avatar Jennifer">
-                        </div>
-                        <div class="contact-info">
-                            <span class="contact-name">Jennifer</span>
-                            <span class="contact-role">Babá</span>
-                        </div>
-                    </li>
+                    <!-- Conversas serão carregadas dinamicamente via JavaScript -->
                 </ul>
             </aside>
 
             <main class="chat-area">
                 <div class="messages" id="messages-container">
-                    <div class="message received">
-                        <p>Opa tudo bom? eu queria contratar seus serviços como ficaria o orçamento para a semana toda?</p>
-                    </div>
-                    <div class="message sent">
-                        <p>Claro o Serviço de na semana fica XYR$ por hora.</p>
-                    </div>
-                    <div class="message sent">
-                        <p>Só vou precisar do seu endereço e a descrição do que vai receber os cuidados.</p>
-                    </div>
-                    <div class="message received">
-                        <p>O endereço é rua Asteca numero 3007 apt 123.com e o meu vó ele tem 89 anos e é calminho mas tem problema de coração</p>
-                    </div>
-                    <div class="message sent">
-                        <p>Perfeito podemos agendar por volta das 10 da manhã</p>
-                    </div>
+                    <!-- Mensagens serão carregadas dinamicamente via JavaScript -->
                 </div>
 
                 <div class="message-input-area">
@@ -254,8 +203,7 @@
     </div>
     <script src="../JS/auth.js"></script>
     <script src="../JS/header.js"></script>
-    <script src="../JS/mensagensAPI.js"></script>
-    <script src="../JS/mensagens-novo.js"></script>
+    <script src="../JS/mensagens.js"></script>
     <script>
         // Carregar dados do usuário no header (APENAS dados cadastrados)
         document.addEventListener('DOMContentLoaded', function() {

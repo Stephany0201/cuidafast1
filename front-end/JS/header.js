@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Atualizar link baseado no tipo de usuário
+      // Não redirecionar, apenas atualizar o link da logo
       if (user.tipo === 'cuidador') {
         logoLink.href = pathPrefix + 'dashboard-cuidador.html';
         console.log('[Header] Logo atualizada para dashboard-cuidador.html');
@@ -49,9 +50,10 @@ document.addEventListener("DOMContentLoaded", () => {
         logoLink.href = pathPrefix + 'homeCliente.html';
         console.log('[Header] Logo atualizada para homeCliente.html');
       } else {
-        // Tipo desconhecido, redirecionar para index
-        logoLink.href = '../../index.html';
-        console.log('[Header] Tipo de usuário desconhecido, redirecionando para index');
+        // Tipo desconhecido, manter link padrão (não redirecionar)
+        console.warn('[Header] Tipo de usuário desconhecido:', user.tipo);
+        // Manter o link atual ou usar homeCliente como padrão
+        logoLink.href = pathPrefix + 'homeCliente.html';
       }
     } catch (error) {
       console.error('[Header] Erro ao atualizar link da logo:', error);
