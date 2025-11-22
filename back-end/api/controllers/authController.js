@@ -1,17 +1,15 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const { body, validationResult } = require('express-validator');
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
-const UsuarioModel = require('../models/UsuarioModel');
-const TokenModel = require('../models/TokenModel');
-const ClienteModel = require('../models/ClienteModel');
-const CuidadorModel = require('../models/CuidadorModel');
+import UsuarioModel from '../models/UsuarioModel.js';
+import TokenModel from '../models/TokenModel.js';
+import ClienteModel from '../models/ClienteModel.js';
+import CuidadorModel from '../models/CuidadorModel.js';
 
 const ACCESS_EXPIRES = '15m';
 const REFRESH_EXPIRES = '30d';
 const BCRYPT_ROUNDS = 10;
 
-// JWT Secret único para simplificar
 const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret_in_production';
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true' || false;
@@ -19,32 +17,51 @@ const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true' || false;
 function createAccessToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_EXPIRES });
 }
+
 function createRefreshToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: REFRESH_EXPIRES });
 }
 
-exports.registerValidators = [
-  body('nome').isLength({ min: 2 }).withMessage('Nome curto'),
-  body('email').isEmail().withMessage('Email inválido'),
-  body('senha').isLength({ min: 6 }).withMessage('Senha precisa de pelo menos 6 caracteres'),
-];
+function validateRegisterBody(data) {
+  const errors = [];
 
-exports.register = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
-  const { nome, email, senha, telefone, data_nascimento, tipo } = req.body;
-  
-  // Validar tipo de usuário
-  if (tipo && !['cliente', 'cuidador'].includes(tipo)) {
-    return res.status(400).json({ message: 'Tipo de usuário inválido. Use "cliente" ou "cuidador"' });
+  if (!data.nome || data.nome.length < 2) {
+    errors.push({ msg: 'Nome curto', field: 'nome' });
   }
 
+  const emailRegex = /\S+@\S+\.\S+/;
+  if (!data.email || !emailRegex.test(data.email)) {
+    errors.push({ msg: 'Email inválido', field: 'email' });
+  }
+
+  if (!data.senha || data.senha.length < 6) {
+    errors.push({ msg: 'Senha precisa de pelo menos 6 caracteres', field: 'senha' });
+  }
+
+  return errors;
+}
+
+export const register = async (req, res) => {
   try {
+    const body = req.body || {};
+    const { nome, email, senha, telefone, data_nascimento, tipo } = body;
+
+    const errors = validateRegisterBody(body);
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    if (tipo && !['cliente', 'cuidador'].includes(tipo)) {
+      return res.status(400).json({ message: 'Tipo de usuário inválido' });
+    }
+
     const existing = await UsuarioModel.findByEmail(email);
-    if (existing) return res.status(409).json({ message: 'Email já cadastrado' });
+    if (existing) {
+      return res.status(409).json({ message: 'Email já cadastrado' });
+    }
 
     const hash = await bcrypt.hash(senha, BCRYPT_ROUNDS);
+
     const userId = await UsuarioModel.create({
       nome,
       email,
@@ -53,7 +70,6 @@ exports.register = async (req, res) => {
       data_nascimento: data_nascimento || null,
     });
 
-    // Criar registro na tabela específica (cliente ou cuidador)
     if (tipo === 'cliente') {
       await ClienteModel.create({
         usuario_id: userId,
@@ -61,7 +77,9 @@ exports.register = async (req, res) => {
         endereco: null,
         preferencias: null
       });
-    } else if (tipo === 'cuidador') {
+    }
+
+    if (tipo === 'cuidador') {
       await CuidadorModel.create({
         usuario_id: userId,
         tipos_cuidado: null,
@@ -79,103 +97,112 @@ exports.register = async (req, res) => {
     }
 
     const user = await UsuarioModel.getById(userId);
-    // não enviar senha de volta
     delete user.senha;
 
-    // Adicionar tipo ao retorno
     user.tipo = tipo || null;
 
     return res.status(201).json({ user });
+
   } catch (err) {
     console.error('register error', err);
     return res.status(500).json({ message: 'Erro no servidor' });
   }
 };
 
-exports.login = async (req, res) => {
-  const { email, senha } = req.body;
+export const login = async (req, res) => {
   try {
+    const { email, senha } = req.body || {};
+
     const user = await UsuarioModel.findByEmail(email);
     if (!user) return res.status(401).json({ message: 'Credenciais inválidas' });
 
     const match = await bcrypt.compare(senha, user.senha);
     if (!match) return res.status(401).json({ message: 'Credenciais inválidas' });
 
-    // tokens
     const payload = { id: user.id, email: user.email };
+
     const accessToken = createAccessToken(payload);
     const refreshToken = createRefreshToken(payload);
 
-    // salvar refresh token no DB
     await TokenModel.create(user.id, refreshToken);
-
-    // atualizar ultimo_login
     await UsuarioModel.setLastLogin(user.id);
 
-    // enviar cookie httpOnly para refresh; access token no body (ou também cookie, se preferir)
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: COOKIE_SECURE,
-      sameSite: 'Lax',
-      domain: COOKIE_DOMAIN,
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30d
-    });
-
-    // Remova senha antes de responder
     delete user.senha;
-    return res.json({ accessToken, user });
+
+    const cookie = [
+      `refreshToken=${refreshToken}`,
+      `HttpOnly`,
+      `Path=/`,
+      `SameSite=Lax`
+    ];
+
+    if (COOKIE_SECURE) cookie.push('Secure');
+    if (COOKIE_DOMAIN) cookie.push(`Domain=${COOKIE_DOMAIN}`);
+
+    res.setHeader('Set-Cookie', cookie.join('; '));
+
+    return res.status(200).json({ accessToken, user });
+
   } catch (err) {
     console.error('login error', err);
     return res.status(500).json({ message: 'Erro no servidor' });
   }
 };
 
-exports.refresh = async (req, res) => {
+export const refresh = async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
     if (!token) return res.status(401).json({ message: 'Refresh token ausente' });
 
-    // verificar se token existe no DB
     const tokenRow = await TokenModel.findByToken(token);
     if (!tokenRow) return res.status(401).json({ message: 'Refresh token inválido' });
 
-    // verificar assinatura
     let payload;
     try {
       payload = jwt.verify(token, JWT_SECRET);
     } catch (e) {
-      // token expirado ou inválido -> remover do DB
       await TokenModel.deleteByToken(token);
       return res.status(401).json({ message: 'Refresh token inválido ou expirado' });
     }
 
-    // gerar novo access token (poderia também renovar refresh se quiser)
-    const accessToken = createAccessToken({ id: payload.id, email: payload.email });
-    return res.json({ accessToken });
+    const accessToken = createAccessToken({
+      id: payload.id,
+      email: payload.email
+    });
+
+    return res.status(200).json({ accessToken });
+
   } catch (err) {
     console.error('refresh error', err);
     return res.status(500).json({ message: 'Erro no servidor' });
   }
 };
 
-exports.logout = async (req, res) => {
+export const logout = async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
+
     if (token) {
       await TokenModel.deleteByToken(token);
     }
-    // Limpar cookie
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: COOKIE_SECURE,
-      sameSite: 'Lax',
-      domain: COOKIE_DOMAIN,
-    });
-    return res.json({ message: 'Deslogado' });
+
+    const cookie = [
+      `refreshToken=`,
+      `HttpOnly`,
+      `Path=/`,
+      `SameSite=Lax`,
+      `Max-Age=0`
+    ];
+
+    if (COOKIE_SECURE) cookie.push('Secure');
+    if (COOKIE_DOMAIN) cookie.push(`Domain=${COOKIE_DOMAIN}`);
+
+    res.setHeader('Set-Cookie', cookie.join('; '));
+
+    return res.status(200).json({ message: 'Deslogado' });
+
   } catch (err) {
     console.error('logout error', err);
     return res.status(500).json({ message: 'Erro no servidor' });
   }
 };
-
-
