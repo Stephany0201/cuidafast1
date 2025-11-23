@@ -1,48 +1,71 @@
-const { sendNotificationToAll, sendNotificationToUser } = require("../services/notificationServices");
+// app/api/notifications/route.js
 
-/**
- * Enviar notificação para todos os usuários
- */
-async function sendNotification(req, res) {
+import { sendNotificationToAll, sendNotificationToUser } from "@/back-end/services/notificationServices";
+
+// Enviar notificação para todos os usuários - POST
+export async function POST(req) {
   try {
-    const { title, body } = req.body;
+    const body = await req.json();
+    const { title, body: message } = body;
 
-    if (!title || !body) {
-      return res.status(400).json({ ok: false, msg: "Título e corpo são obrigatórios" });
+    if (!title || !message) {
+      return new Response(
+        JSON.stringify({ ok: false, msg: "Título e corpo são obrigatórios" }),
+        { status: 400 }
+      );
     }
 
-    const response = await sendNotificationToAll(title, body);
-    res.json(response);
+    const response = await sendNotificationToAll(title, message);
+    return new Response(JSON.stringify(response), { status: 200 });
+
   } catch (error) {
     console.error("Erro ao enviar notificação:", error);
-    res.status(500).json({ ok: false, error: error.message });
+    return new Response(
+      JSON.stringify({ ok: false, error: error.message }),
+      { status: 500 }
+    );
   }
 }
 
-/**
- * Enviar notificação para um usuário específico
- */
-async function sendNotificationToSpecificUser(req, res) {
+// Enviar notificação para um usuário específico - PUT
+export async function PUT(req) {
   try {
-    const { userId, title, body } = req.body;
+    const body = await req.json();
+    const { userId, title, body: message } = body;
 
-    if (!userId || !title || !body) {
-      return res.status(400).json({ 
-        ok: false, 
-        msg: "userId, título e corpo são obrigatórios" 
-      });
+    if (!userId || !title || !message) {
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          msg: "userId, título e corpo são obrigatórios"
+        }),
+        { status: 400 }
+      );
     }
 
-    const response = await sendNotificationToUser(userId, title, body);
-    res.json(response);
+    const response = await sendNotificationToUser(userId, title, message);
+    return new Response(JSON.stringify(response), { status: 200 });
+
   } catch (error) {
     console.error("Erro ao enviar notificação:", error);
-    res.status(500).json({ ok: false, error: error.message });
+    return new Response(
+      JSON.stringify({ ok: false, error: error.message }),
+      { status: 500 }
+    );
   }
 }
+/*
+puxar no front
+await fetch("/api/notifications", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ title: "Hello!", body: "Mensagem geral" })
+});
+usuario especifico
+await fetch("/api/notifications", {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ userId: 12, title: "Aviso", body: "Notificação privada" })
+});
 
-module.exports = { 
-  sendNotification,
-  sendNotificationToSpecificUser
-};
-
+*/
