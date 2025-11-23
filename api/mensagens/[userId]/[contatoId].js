@@ -1,4 +1,4 @@
-const { getMensagens } = require('../../../../back-end/api/controllers/mensagemController.js');
+const { getMensagens } = require('../../../back-end/api/controllers/mensagemController.js');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
