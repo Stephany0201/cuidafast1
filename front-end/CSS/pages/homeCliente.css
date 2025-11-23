@@ -556,8 +556,9 @@ body.short-page .rodape{
 }
 
 .modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.3);
     opacity: 1 !important;
+    backdrop-filter: blur(2px);
 }
 
 .modal-header {
@@ -1234,8 +1235,9 @@ body.short-page .rodape{
 }
 
 .modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.3);
     opacity: 1 !important;
+    backdrop-filter: blur(2px);
 }
 
 .modal-header {
@@ -1651,10 +1653,11 @@ body.short-page .rodape{
     border-bottom-right-radius: 12px;
 }
 
-/* Garantir que o backdrop seja escuro */
+/* Garantir que o backdrop seja transparente e permita ver o fundo */
 #filterModal.modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.5) !important;
+    background-color: rgba(0, 0, 0, 0.3) !important;
     opacity: 1 !important;
+    backdrop-filter: blur(2px);
 }
 
 /* Estilo para labels e textos dentro do modal */
@@ -1793,10 +1796,11 @@ body.short-page .rodape{
     opacity: 1 !important;
 }
 
-/* Garantir que o backdrop seja visível */
+/* Garantir que o backdrop seja visível e permita ver o fundo */
 .modal-backdrop {
-    background-color: rgba(27, 71, 93, 0.5) !important;
+    background-color: rgba(27, 71, 93, 0.3) !important;
     opacity: 1 !important;
+    backdrop-filter: blur(2px);
 }
 /* ===== POP-UP DE CONFIRMAÇÃO DE LOGOUT ===== */
 .logout-popup {
