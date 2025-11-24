@@ -7,8 +7,6 @@
     "dev": "nodemon back-end/api/server.js"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "pg": "^8.11.3",
     "@supabase/supabase-js": "^2.39.0",
