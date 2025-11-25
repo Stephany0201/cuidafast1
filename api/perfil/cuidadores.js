@@ -1,4 +1,4 @@
-import { listarCuidadores } from '../../back-end/api/controllers/perfilController';
+/*import { listarCuidadores } from '../../back-end/api/controllers/perfilController';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -12,3 +12,4 @@ export default async function handler(req, res) {
   }
   return res.status(405).json({ message: 'Método não permitido' });
 }
+*/
