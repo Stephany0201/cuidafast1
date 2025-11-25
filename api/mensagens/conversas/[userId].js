@@ -1,4 +1,4 @@
-const { getConversas } = require('../../../back-end/api/controllers/mensagemController.js');
+/* const { getConversas } = require('../../../back-end/api/controllers/mensagemController.js');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -24,4 +24,4 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ message: 'Erro interno do servidor', error: err.message });
   }
 }
-
+*/
