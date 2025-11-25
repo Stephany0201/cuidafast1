@@ -1,5 +1,4 @@
-
-import { sendNotification } from '../../../back-end/api/controllers/notificationController';
+/*import { sendNotification } from '../../../back-end/api/controllers/notificationController';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -28,3 +27,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ message: 'Erro interno do servidor' });
   }
 }
+*/
