@@ -1,7 +1,6 @@
 {
   "name": "cuidafast-hub",
   "version": "1.0.0",
-  "main": "back-end/api/index.js",
   "scripts": {
     "dev": "vercel dev"
   },
