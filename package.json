@@ -2,7 +2,8 @@
   "name": "cuidafast-hub",
   "version": "1.0.0",
   "scripts": {
-    "dev": "vercel dev"
+    "dev": "vercel dev",
+    "start": "node back-end/api/server.js"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
