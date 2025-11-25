@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "main": "back-end/api/index.js",
   "scripts": {
-    "start": "node back-end/api/server.js",
-    "dev": "nodemon back-end/api/server.js"
+    "dev": "vercel dev"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
