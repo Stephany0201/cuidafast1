@@ -1,4 +1,4 @@
-import { actualizarFotoPerfil } from '../../back-end/api/controllers/perfilController';
+/*import { actualizarFotoPerfil } from '../../back-end/api/controllers/perfilController';
 
 export default async function handler(req, res) {
   if (req.method === 'PUT') {
@@ -19,3 +19,4 @@ export default async function handler(req, res) {
   }
   return res.status(405).json({ message: 'Método não permitido' });
 }
+*/
