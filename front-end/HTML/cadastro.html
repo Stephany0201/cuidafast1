@@ -10,6 +10,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="../assets/icone_verde.svg">
+  <script>
+    window.API_CONFIG = {
+      AUTH: "/api/auth"
+    };
+  </script>
 </head>
 <body>
   <div class="container-cadastro">
@@ -38,10 +43,11 @@
 
     <form id="form-cadastro">
       <div class="input-group">
-        <input type="text" placeholder="Nome" required />
-        <input type="email" placeholder="E-mail" required />
-        <input type="tel" placeholder="Telefone" />
-        <input type="password" placeholder="Senha" required />
+        <input id="input-nome" type="text" placeholder="Nome" required />
+        <input id="input-email" type="email" placeholder="E-mail" required />
+        <input id="input-telefone" type="tel" placeholder="Telefone" />
+        <input id="input-senha" type="password" placeholder="Senha" required />
+        
       </div>
       <button type="submit" class="btn">Continuar</button>
     </form id="form-cadastro">
