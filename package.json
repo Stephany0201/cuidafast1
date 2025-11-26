@@ -30,7 +30,7 @@
     "node": "22.x"
   },
   "description": "npm",
-  "main": "index.js",
+  "main": "public/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kpascoal-hub/CuidaFast-Vercel.git"
