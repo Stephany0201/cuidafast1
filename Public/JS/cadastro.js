@@ -1,9 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
-// SUPABASE
+
 const SUPABASE_URL = "https://kgwepkcxmsoyebxczqwe.supabase.co";
 const SUPABASE_ANON_KEY = "";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 
 document.getElementById("btn-google").addEventListener("click", () => {
   supabase.auth.signInWithOAuth({
