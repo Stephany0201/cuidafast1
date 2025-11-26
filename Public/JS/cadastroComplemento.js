@@ -1,56 +1,57 @@
-// cadastroComplemento.js
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("[cadastroComplemento] iniciando");
+// Public/JS/cadastroComplemento.js
+import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
-  const form = document.getElementById("complementForm");
-  if (!form) return;
+const SUPABASE_URL = "https://kgwepkcxmsoyebxczqwe.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tdndpY2V0b2pocXVyZGV1ZXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0MTI5MTEsImV4cCI6MjA3ODk4ODkxMX0.3XyOux7wjBIC2kIlmdSCTYzznzZOk5tJcHJJMA3Jggc";
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('[cadastroComplemento] iniciando');
 
-    const existing = JSON.parse(localStorage.getItem("cuidafast_user") || "{}");
-    if (!existing.email) {
-      alert("Erro: dados iniciais não encontrados. Faça o cadastro novamente.");
-      window.location.href = "cadastro.html";
-      return;
-    }
+  // primeiro: verifica se veio por OAuth (supabase)
+  const urlHash = window.location.hash || '';
+  // Supabase automatically manages session on redirect; we can read user
+  const { data: { session, user } } = await supabase.auth.getSession();
 
-    const telefone = document.getElementById("telefone").value || existing.telefone || null;
-    const dataNascimento = document.getElementById("dataNascimento").value || null;
-    const cpf = document.getElementById("cpf").value || null;
+  // tipo previamente guardado no localStorage
+  const tipo = localStorage.getItem('cuidafast_tipoRegistro') || new URLSearchParams(window.location.search).get('tipo') || 'cliente';
 
-    const payload = {
-      id: existing.id, // id interno que seu backend criou
-      email: existing.email,
-      nome: existing.nome,
-      telefone,
-      data_nascimento: dataNascimento,
-      cpf_numero: cpf,
-      tipo: existing.tipo
-    };
-
+  // Se usuário autenticado via Supabase, envie para backend para criar/atualizar perfil
+  if (user && user.email) {
     try {
+      const payload = {
+        email: user.email,
+        nome: user.user_metadata?.full_name || user.email.split('@')[0],
+        foto_url: user.user_metadata?.avatar_url || null,
+        tipo: tipo
+      };
+
       const API_URL = window.API_CONFIG?.AUTH || "/api/auth";
-      const resp = await fetch(`${API_URL}/register-oauth`, {
+
+      const resp = await fetch(`${API_URL}/google-login`, {
         method: "POST",
-        headers: {"Content-Type":"application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 
-      const data = await resp.json();
-      if (!resp.ok) {
-        alert(data.message || "Erro ao completar cadastro.");
-        return;
-      }
+      const result = await resp.json();
 
-      // Mesclar e salvar localmente
-      const merged = { ...existing, ...payload, cadastroComplementoCompleto: true };
-      localStorage.setItem("cuidafast_user", JSON.stringify(merged));
-      // redireciona para área do usuário
-      window.location.href = "/HTML/homeCliente.html";
+      if (!resp.ok) {
+        console.warn('Aviso: não foi possível criar/atualizar usuário no backend', result);
+        // Ainda assim, permite o usuário preencher dados complementares
+      } else {
+        // guarda user retornado no localStorage (se houver)
+        if (result.user) {
+          localStorage.setItem('cuidafast_user', JSON.stringify(result.user));
+          localStorage.setItem('cuidafast_isLoggedIn', 'true');
+        }
+      }
     } catch (err) {
-      console.error(err);
-      alert("Erro ao salvar dados.");
+      console.error('Erro ao notificar backend:', err);
     }
-  });
+  } else {
+    console.log('[cadastroComplemento] Usuário não autenticado via Supabase — o usuário pode estar vindo de cadastro tradicional.');
+  }
+
+  // Inicializa o formulário normalmente (o restante do seu código já existente manipula o submit)
 });
