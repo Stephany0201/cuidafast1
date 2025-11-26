@@ -26,9 +26,6 @@
   "devDependencies": {
     "nodemon": "^3.0.2"
   },
-  "engines": {
-    "node": "22.x"
-  },
   "description": "npm",
   "main": "public/index.html",
   "repository": {
