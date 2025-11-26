@@ -1,27 +1,51 @@
-const db = require('./db');
+const supabase = require('./db');
 
 class TokenModel {
   static async create(userId, token) {
-    const result = await db.query(
-      'INSERT INTO tokens (user_id, token) VALUES ($1, $2) RETURNING id',
-      [userId, token]
-    );
-    return result.rows[0].id;
+    const { data, error } = await supabase
+      .from('tokens')
+      .insert({
+        user_id: userId,
+        token
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    return data.id;
   }
 
   static async findByToken(token) {
-    const result = await db.query('SELECT * FROM tokens WHERE token = $1', [token]);
-    return result.rows[0];
+    const { data, error } = await supabase
+      .from('tokens')
+      .select('*')
+      .eq('token', token)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return data || null;
   }
 
   static async deleteByToken(token) {
-    const result = await db.query('DELETE FROM tokens WHERE token = $1', [token]);
-    return result.rowCount;
+    const { data, error } = await supabase
+      .from('tokens')
+      .delete()
+      .eq('token', token)
+      .select();
+
+    if (error) throw error;
+    return data ? data.length : 0;
   }
 
   static async deleteAllForUser(userId) {
-    const result = await db.query('DELETE FROM tokens WHERE user_id = $1', [userId]);
-    return result.rowCount;
+    const { data, error } = await supabase
+      .from('tokens')
+      .delete()
+      .eq('user_id', userId)
+      .select();
+
+    if (error) throw error;
+    return data ? data.length : 0;
   }
 }
 

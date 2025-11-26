@@ -1,24 +1,52 @@
-const db = require('./db');
+const supabase = require('./db');
 
 class VinculoModel {
   static async getCuidadorIdByClienteId(cliente_id) {
-    const result = await db.query('SELECT cuidador_id FROM vinculos WHERE cliente_id = $1 LIMIT 1', [cliente_id]);
-    return result.rows[0] ? result.rows[0].cuidador_id : null;
+    const { data, error } = await supabase
+      .from('vinculos')
+      .select('cuidador_id')
+      .eq('cliente_id', cliente_id)
+      .limit(1)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return data ? data.cuidador_id : null;
   }
 
   static async getClienteIdByCuidadorId(cuidador_id) {
-    const result = await db.query('SELECT cliente_id FROM vinculos WHERE cuidador_id = $1 LIMIT 1', [cuidador_id]);
-    return result.rows[0] ? result.rows[0].cliente_id : null;
+    const { data, error } = await supabase
+      .from('vinculos')
+      .select('cliente_id')
+      .eq('cuidador_id', cuidador_id)
+      .limit(1)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return data ? data.cliente_id : null;
   }
 
   static async create(cliente_id, cuidador_id) {
-    await db.query('INSERT INTO vinculos (cliente_id, cuidador_id) VALUES ($1, $2)', [cliente_id, cuidador_id]);
+    const { error } = await supabase
+      .from('vinculos')
+      .insert({
+        cliente_id,
+        cuidador_id
+      });
+
+    if (error) throw error;
     return true;
   }
 
   static async delete(cliente_id, cuidador_id) {
-    const res = await db.query('DELETE FROM vinculos WHERE cliente_id = $1 AND cuidador_id = $2', [cliente_id, cuidador_id]);
-    return res.rowCount > 0;
+    const { data, error } = await supabase
+      .from('vinculos')
+      .delete()
+      .eq('cliente_id', cliente_id)
+      .eq('cuidador_id', cuidador_id)
+      .select();
+
+    if (error) throw error;
+    return data ? data.length > 0 : false;
   }
 }
 
