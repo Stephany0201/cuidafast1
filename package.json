@@ -32,12 +32,12 @@
   "main": "public/index.html",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kpascoal-hub/CuidaFast-Vercel.git"
+    "url": "git+https://github.com/carollicciardii/cuidafast1.git"
   },
   "author": "cuidafast",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/kpascoal-hub/CuidaFast-Vercel/issues"
+    "url": "https://github.com/carollicciardii/cuidafast1/issues"
   },
-  "homepage": "https://github.com/kpascoal-hub/CuidaFast-Vercel#readme"
+  "homepage": "https://github.com/carollicciardii/cuidafast1#readme"
 }
