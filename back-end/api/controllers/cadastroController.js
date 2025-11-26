@@ -1,5 +1,3 @@
-// back-end/api/controllers/cadastroController.js
-// Substituído: removido Firebase; agora recebe dados do front (enviados após Supabase OAuth)
 // Espera: POST { email, nome, foto_url, tipo_usuario }
 // Retorna: 201 user criado / 200 user atualizado
 

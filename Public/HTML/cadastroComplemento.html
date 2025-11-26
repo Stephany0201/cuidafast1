@@ -3,6 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+  
+    const SUPABASE_URL = "https://kgwepkcxmsoyebxczqwe.supabase.co";
+    const SUPABASE_ANON_KEY = "SUA_ANON_KEY_PUBLICA_AQUI";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+    // Ao carregar a página, Supabase já restaurou a sessão (após redirect OAuth)
+    (async () => {
+      const { data: { session, user } } = await supabase.auth.getSession();
+      if (user) {
+        console.log('Usuário autenticado via Supabase:', user.email);
+        // Guarda temporariamente para o JS do formulário usar
+        localStorage.setItem('cuidafast_oauth_user', JSON.stringify({
+          email: user.email,
+          nome: user.user_metadata?.full_name || null,
+          photo_url: user.user_metadata?.avatar_url || null
+        }));
+      }
+    })();
+  </script>
   <title>Complete seu Cadastro - CuidaFast</title>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <link rel="stylesheet" href="../CSS/styles.css">
@@ -12,18 +33,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="../assets/icone_verde.svg">
 </head>
-<script type="module">
-  import { supabase } from "./supabaseClient.js";
-  
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === "SIGNED_IN") {
-      console.log("Usuário retornou do Google:", session.user);
-  
-      // Redireciona para preencher os dados complementares
-      window.location.href = "/cadastro-complementar.html";
-    }
-  });
-  </script>  
+
 <body>
   <div class="container-cadastro">
     <div class="back">
