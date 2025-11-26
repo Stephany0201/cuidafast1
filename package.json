@@ -19,9 +19,7 @@
     "lodash": "^4.17.21",
     "mindee": "^4.30.0",
     "moment": "^2.30.1",
-    "moment-timezone": "^0.6.0",
-    "mysql2": "^3.15.1",
-    "pg": "^8.11.3"
+    "moment-timezone": "^0.6.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
@@ -33,12 +31,12 @@
   "main": "public/index.html",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kpascoal-hub/CuidaFast-Vercel.git"
+    "url": "git+https://github.com/carollicciardii/cuidafast1.git"
   },
   "author": "cuidafast",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/kpascoal-hub/CuidaFast-Vercel/issues"
+    "url": "https://github.com/carollicciardii/cuidafast1"
   },
-  "homepage": "https://github.com/kpascoal-hub/CuidaFast-Vercel#readme"
+  "homepage": "https://github.com/carollicciardii/cuidafast1#readme"
 }
