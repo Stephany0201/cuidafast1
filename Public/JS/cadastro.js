@@ -1,29 +1,15 @@
-// IMPORTS
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
-// SUPABASE
+
 const SUPABASE_URL = "https://kgwepkcxmsoyebxczqwe.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtnd2Vwa2N4bXNveWVieGN6cXdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyNDgxMjEsImV4cCI6MjA3NjgyNDEyMX0.26hZ-Az3bhtOpgDKz2auih183u7ZdZD_R3GCHH-REuU";
+const SUPABASE_ANON_KEY = "";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// FIREBASE
-const firebaseConfig = {
-  apiKey: "AIzaSyBsiC8RaCd-6bwuThixa1ZxFkK4JhHgfjk",
-  authDomain: "cuidafast-hub-af250.firebaseapp.com",
-  projectId: "cuidafast-hub-af250",
-  storageBucket: "cuidafast-hub-af250.appspot.com",
-  messagingSenderId: "263800638065",
-  appId: "1:263800638065:web:9b655c9d3e3acea160e9d0",
-  measurementId: "G-701M8B5CZC",
-};
-
-const app = initializeApp(firebaseConfig);
-getAnalytics(app);
-
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
+document.getElementById("btn-google").addEventListener("click", () => {
+  supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.origin + "/homeCliente.html" }
+  });
+});
 
 // VARIÁVEIS GLOBAIS
 let btnCuidador, btnCliente, form, btnSubmit;
