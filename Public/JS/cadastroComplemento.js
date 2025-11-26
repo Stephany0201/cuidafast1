@@ -1,7 +1,7 @@
 // Public/JS/cadastroComplemento.js
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
-const SUPABASE_URL = "https://kgwepkcxmsoyebxczqwe.supabase.co";
+const SUPABASE_URL = "https://omvwicetojhqurdeuequ.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tdndpY2V0b2pocXVyZGV1ZXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0MTI5MTEsImV4cCI6MjA3ODk4ODkxMX0.3XyOux7wjBIC2kIlmdSCTYzznzZOk5tJcHJJMA3Jggc";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
