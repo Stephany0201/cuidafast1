@@ -3,6 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<<<<<<< HEAD
+=======
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+  
+    const SUPABASE_URL = "https://kgwepkcxmsoyebxczqwe.supabase.co";
+    const SUPABASE_ANON_KEY = "SUA_ANON_KEY_PUBLICA_AQUI";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+    // Ao carregar a página, Supabase já restaurou a sessão (após redirect OAuth)
+    (async () => {
+      const { data: { session, user } } = await supabase.auth.getSession();
+      if (user) {
+        console.log('Usuário autenticado via Supabase:', user.email);
+        // Guarda temporariamente para o JS do formulário usar
+        localStorage.setItem('cuidafast_oauth_user', JSON.stringify({
+          email: user.email,
+          nome: user.user_metadata?.full_name || null,
+          photo_url: user.user_metadata?.avatar_url || null
+        }));
+      }
+    })();
+  </script>
+>>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
   <title>Complete seu Cadastro - CuidaFast</title>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <link rel="stylesheet" href="../CSS/styles.css">
@@ -12,6 +36,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="../assets/icone_verde.svg">
 </head>
+<<<<<<< HEAD
+=======
+
+>>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 <body>
   <div class="container-cadastro">
     <div class="back">

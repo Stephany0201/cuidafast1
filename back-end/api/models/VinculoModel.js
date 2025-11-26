@@ -38,6 +38,7 @@ class VinculoModel {
   }
 
   static async delete(cliente_id, cuidador_id) {
+<<<<<<< HEAD
     const { data, error } = await supabase
       .from('vinculos')
       .delete()
@@ -47,6 +48,10 @@ class VinculoModel {
 
     if (error) throw error;
     return data ? data.length > 0 : false;
+=======
+    const res = await db.query('DELETE FROM vinculos WHERE cliente_id = $1 AND cuidador_id = $2', [cliente_id, cuidador_id]);
+    return res.rowCount > 0;
+>>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
   }
 }
 
