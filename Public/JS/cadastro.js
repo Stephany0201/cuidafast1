@@ -1,33 +1,4 @@
 // cadastro.js
-<<<<<<< HEAD
-import { createClient } from "https://esm.sh/@supabase/supabase-js";
-
-const SUPABASE_URL = "https://kgwepkcxmsoyebxczqwe.supabase.co";
-const SUPABASE_ANON_KEY = "SUA_ANON_KEY_PUBLICA_AQUI"; // ok deixar público (RLS protege). Veja instruções abaixo.
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// VARIÁVEIS GLOBAIS
-let btnCuidador, btnCliente, form, btnSubmit;
-
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("[Cadastro] Inicializando página...");
-
-  btnCuidador = document.getElementById("btn-cuidador");
-  btnCliente = document.getElementById("btn-cliente");
-  form = document.getElementById("form-cadastro");
-  btnSubmit = document.querySelector("button[type='submit']");
-  const btnGoogle = document.getElementById("btn-google");
-
-  if (!btnCuidador || !btnCliente || !form) {
-    console.error("[Cadastro] Elementos principais não encontrados");
-    return;
-  }
-
-  btnCuidador.classList.add("active");
-  btnCliente.classList.add("inactive");
-  if (btnSubmit) btnSubmit.textContent = "Continuar";
-
-=======
 // Versão revisada — mantém seu fluxo original (POST /api/auth/register) e adiciona
 // fallback/integração com Supabase (anon key) quando necessário.
 // REMOVER referências ao Firebase (feito).
@@ -109,7 +80,6 @@ document.addEventListener("DOMContentLoaded", () => {
   btnSubmit.textContent = "Continuar";
 
   // Event listeners
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
   btnCuidador.addEventListener("click", ativarCuidador);
   btnCliente.addEventListener("click", ativarCliente);
   form.addEventListener("submit", handleFormSubmit);
@@ -117,28 +87,17 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnGoogle) {
     btnGoogle.addEventListener("click", loginGoogleSupabase);
   } else {
-<<<<<<< HEAD
-    console.error("[Cadastro] Botão do Google não encontrado");
-  }
-});
-
-=======
     console.warn("[Cadastro] Botão Google não encontrado — OAuth Google ficará desabilitado.");
   }
 });
 
 // ---------------------- UI: Toggle ----------------------
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 function ativarCuidador() {
   btnCuidador.classList.add("active");
   btnCuidador.classList.remove("inactive");
   btnCliente.classList.remove("active");
   btnCliente.classList.add("inactive");
-<<<<<<< HEAD
-  btnSubmit.textContent = "Continuar";
-=======
   if (btnSubmit) btnSubmit.textContent = "Continuar";
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 }
 
 function ativarCliente() {
@@ -146,36 +105,14 @@ function ativarCliente() {
   btnCliente.classList.remove("inactive");
   btnCuidador.classList.remove("active");
   btnCuidador.classList.add("inactive");
-<<<<<<< HEAD
-  btnSubmit.textContent = "Continuar";
-}
-
-// CADASTRO TRADICIONAL (envia para seu backend /api/auth/register)
-=======
   if (btnSubmit) btnSubmit.textContent = "Continuar";
 }
 
 // ---------------------- HANDLER: submit do form ----------------------
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 async function handleFormSubmit(event) {
   event.preventDefault();
   console.log("[Cadastro] Formulário enviado");
 
-<<<<<<< HEAD
-  const nome = document.getElementById("input-nome").value.trim();
-  const email = document.getElementById("input-email").value.trim();
-  const telefone = document.getElementById("input-telefone").value.trim();
-  const senha = document.getElementById("input-senha").value.trim();
-
-  if (!nome || !email || !senha) {
-    alert("Preencha todos os campos obrigatórios.");
-    return;
-  }
-
-  const tipoUsuario =
-    btnCuidador.classList.contains("active") ? "cuidador" : "cliente";
-
-=======
   // Suporta vários nomes de ids (compatibilidade)
   const nome = getVal("input-nome", "nome", "input-name");
   const email = getVal("input-email", "email", "input-email-address");
@@ -190,48 +127,10 @@ async function handleFormSubmit(event) {
   const tipoUsuario = btnCuidador.classList.contains("active") ? "cuidador" : "cliente";
 
   // Disable botão
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
   btnSubmit.disabled = true;
   btnSubmit.textContent = "Cadastrando...";
 
   try {
-<<<<<<< HEAD
-    const API_URL = window.API_CONFIG?.AUTH || "/api/auth";
-
-    const response = await fetch(`${API_URL}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nome,
-        email,
-        senha,
-        telefone: telefone || null,
-        data_nascimento: null,
-        tipo: tipoUsuario,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      alert(data.message || "Erro ao cadastrar.");
-      return;
-    }
-
-    const userData = {
-      id: data.user.id,
-      nome: data.user.nome,
-      email: data.user.email,
-      telefone: data.user.telefone,
-      tipo: tipoUsuario,
-      dataCadastro: data.user.data_cadastro,
-      primeiroNome: nome.split(" ")[0],
-    };
-
-    localStorage.setItem("cuidafast_user", JSON.stringify(userData));
-    localStorage.setItem("cuidafast_isLoggedIn", "true");
-
-=======
     // Se existir configuração de API externa (backend), use ela como primário
     const API_URL = window.API_CONFIG?.AUTH || "/api/auth";
 
@@ -389,47 +288,20 @@ async function handleFormSubmit(event) {
     localStorage.setItem("cuidafast_isLoggedIn", "true");
 
     // redireciona para complemento conforme tipo
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
     if (tipoUsuario === "cuidador") {
       window.location.href = "../HTML/cadastroComplementoCuidador.html";
     } else {
       window.location.href = "../HTML/cadastroComplemento.html";
     }
   } catch (err) {
-<<<<<<< HEAD
-    console.error(err);
-    alert("Erro no servidor.");
-=======
     console.error("[Cadastro] erro inesperado:", err);
     uiMsg("Erro inesperado no processo de cadastro. Veja console.", "error");
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
   } finally {
     btnSubmit.disabled = false;
     btnSubmit.textContent = "Continuar";
   }
 }
 
-<<<<<<< HEAD
-// LOGIN GOOGLE via Supabase (redirect)
-async function loginGoogleSupabase() {
-  console.log("[Cadastro] Login Google via Supabase iniciado…");
-
-  const tipoUsuario =
-    btnCuidador.classList.contains("active") ? "cuidador" : "cliente";
-
-  // Guarda escolha para o callback ler e decidir
-  localStorage.setItem("cuidafast_tipoRegistro", tipoUsuario);
-
-  await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      // defina onde quer que o Supabase redirecione após oauth
-      redirectTo: window.location.origin + "/callbackGoogle.html"
-    }
-  });
-}
-=======
-// ---------------------- LOGIN GOOGLE via Supabase (OAuth redirect) ----------------------
 async function loginGoogleSupabase() {
   if (!supabase) {
     uiMsg("Supabase não configurado no frontend. Não é possível iniciar OAuth.", "error");
@@ -457,4 +329,3 @@ export {
   handleFormSubmit,
   loginGoogleSupabase
 };
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
