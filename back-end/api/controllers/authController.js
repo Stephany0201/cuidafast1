@@ -1,11 +1,15 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { createClient } from '@supabase/supabase-js';
 
 import UsuarioModel from '../models/UsuarioModel.js';
 import TokenModel from '../models/TokenModel.js';
 import ClienteModel from '../models/ClienteModel.js';
 import CuidadorModel from '../models/CuidadorModel.js';
 
+/* ------------------------------------------
+    CONFIG
+-------------------------------------------*/
 const ACCESS_EXPIRES = '15m';
 const REFRESH_EXPIRES = '30d';
 const BCRYPT_ROUNDS = 10;
@@ -14,12 +18,37 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret_in_production';
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true' || false;
 
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+/* ------------------------------------------
+    SUPABASE CLIENT
+-------------------------------------------*/
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ------------------------------------------
+    HELPERS
+-------------------------------------------*/
 function createAccessToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_EXPIRES });
 }
 
 function createRefreshToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: REFRESH_EXPIRES });
+}
+
+function setRefreshCookie(res, token) {
+  const cookie = [
+    `refreshToken=${token}`,
+    `HttpOnly`,
+    `Path=/`,
+    `SameSite=Lax`
+  ];
+
+  if (COOKIE_SECURE) cookie.push('Secure');
+  if (COOKIE_DOMAIN) cookie.push(`Domain=${COOKIE_DOMAIN}`);
+
+  res.setHeader('Set-Cookie', cookie.join('; '));
 }
 
 function validateRegisterBody(data) {
@@ -41,6 +70,9 @@ function validateRegisterBody(data) {
   return errors;
 }
 
+/* ------------------------------------------
+    REGISTER TRADICIONAL
+-------------------------------------------*/
 export const register = async (req, res) => {
   try {
     const body = req.body || {};
@@ -68,38 +100,21 @@ export const register = async (req, res) => {
       senha: hash,
       telefone: telefone || null,
       data_nascimento: data_nascimento || null,
+      tipo: tipo || null,
+      photo_url: null,
+      auth_uid: null
     });
 
     if (tipo === 'cliente') {
-      await ClienteModel.create({
-        usuario_id: userId,
-        historico_contratacoes: null,
-        endereco: null,
-        preferencias: null
-      });
+      await ClienteModel.create({ usuario_id: userId });
     }
 
     if (tipo === 'cuidador') {
-      await CuidadorModel.create({
-        usuario_id: userId,
-        tipos_cuidado: null,
-        descricao: null,
-        valor_hora: null,
-        especialidades: null,
-        experiencia: null,
-        avaliacao: null,
-        horarios_disponiveis: null,
-        idiomas: null,
-        formacao: null,
-        local_trabalho: null,
-        ganhos: null
-      });
+      await CuidadorModel.create({ usuario_id: userId });
     }
 
     const user = await UsuarioModel.getById(userId);
     delete user.senha;
-
-    user.tipo = tipo || null;
 
     return res.status(201).json({ user });
 
@@ -109,6 +124,9 @@ export const register = async (req, res) => {
   }
 };
 
+/* ------------------------------------------
+    LOGIN TRADICIONAL
+-------------------------------------------*/
 export const login = async (req, res) => {
   try {
     const { email, senha } = req.body || {};
@@ -120,7 +138,6 @@ export const login = async (req, res) => {
     if (!match) return res.status(401).json({ message: 'Credenciais inválidas' });
 
     const payload = { id: user.id, email: user.email };
-
     const accessToken = createAccessToken(payload);
     const refreshToken = createRefreshToken(payload);
 
@@ -129,17 +146,7 @@ export const login = async (req, res) => {
 
     delete user.senha;
 
-    const cookie = [
-      `refreshToken=${refreshToken}`,
-      `HttpOnly`,
-      `Path=/`,
-      `SameSite=Lax`
-    ];
-
-    if (COOKIE_SECURE) cookie.push('Secure');
-    if (COOKIE_DOMAIN) cookie.push(`Domain=${COOKIE_DOMAIN}`);
-
-    res.setHeader('Set-Cookie', cookie.join('; '));
+    setRefreshCookie(res, refreshToken);
 
     return res.status(200).json({ accessToken, user });
 
@@ -149,6 +156,83 @@ export const login = async (req, res) => {
   }
 };
 
+/* ------------------------------------------
+    GOOGLE LOGIN (NOVO)
+-------------------------------------------*/
+export const googleLogin = async (req, res) => {
+  try {
+    // O front vai mandar o session do Supabase
+    const { access_token } = req.body;
+
+    if (!access_token) {
+      return res.status(400).json({ message: 'Token não enviado' });
+    }
+
+    // Recupera usuário logado no Supabase
+    const { data, error } = await supabase.auth.getUser(access_token);
+
+    if (error || !data?.user) {
+      return res.status(401).json({ message: 'Falha ao validar token do Google' });
+    }
+
+    const supaUser = data.user;
+
+    const email = supaUser.email;
+    const nome = supaUser.user_metadata?.full_name || null;
+    const photo_url = supaUser.user_metadata?.avatar_url || null;
+    const auth_uid = supaUser.id;
+
+    // Verifica se já existe no seu DB
+    let user = await UsuarioModel.findByEmail(email);
+
+    if (!user) {
+      // cria usuário base
+      const newId = await UsuarioModel.create({
+        nome,
+        email,
+        senha: null,
+        telefone: null,
+        data_nascimento: null,
+        tipo: null,
+        photo_url,
+        auth_uid
+      });
+
+      user = await UsuarioModel.getById(newId);
+    } else {
+      // atualiza auth_uid + foto se mudou
+      await UsuarioModel.updateGoogleData(user.id, auth_uid, photo_url);
+      user = await UsuarioModel.getById(user.id);
+    }
+
+    // JWT
+    const payload = { id: user.id, email: user.email };
+    const accessToken = createAccessToken(payload);
+    const refreshToken = createRefreshToken(payload);
+
+    // salva refresh interno
+    await TokenModel.create(user.id, refreshToken);
+    await UsuarioModel.setLastLogin(user.id);
+
+    delete user.senha;
+
+    setRefreshCookie(res, refreshToken);
+
+    return res.status(200).json({
+      accessToken,
+      user,
+      google: true
+    });
+
+  } catch (err) {
+    console.error('googleLogin error', err);
+    return res.status(500).json({ message: 'Erro no servidor' });
+  }
+};
+
+/* ------------------------------------------
+    REFRESH
+-------------------------------------------*/
 export const refresh = async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
@@ -178,6 +262,9 @@ export const refresh = async (req, res) => {
   }
 };
 
+/* ------------------------------------------
+    LOGOUT
+-------------------------------------------*/
 export const logout = async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
@@ -186,18 +273,9 @@ export const logout = async (req, res) => {
       await TokenModel.deleteByToken(token);
     }
 
-    const cookie = [
-      `refreshToken=`,
-      `HttpOnly`,
-      `Path=/`,
-      `SameSite=Lax`,
-      `Max-Age=0`
-    ];
-
-    if (COOKIE_SECURE) cookie.push('Secure');
-    if (COOKIE_DOMAIN) cookie.push(`Domain=${COOKIE_DOMAIN}`);
-
-    res.setHeader('Set-Cookie', cookie.join('; '));
+    // limpa cookie
+    setRefreshCookie(res, '');
+    res.setHeader('Set-Cookie', 'refreshToken=; HttpOnly; Path=/; Max-Age=0;');
 
     return res.status(200).json({ message: 'Deslogado' });
 
@@ -205,4 +283,12 @@ export const logout = async (req, res) => {
     console.error('logout error', err);
     return res.status(500).json({ message: 'Erro no servidor' });
   }
+};
+
+export default {
+  register,
+  login,
+  googleLogin,
+  refresh,
+  logout
 };

@@ -12,6 +12,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="../assets/icone_verde.svg">
 </head>
+<script type="module">
+  import { supabase } from "./supabaseClient.js";
+  
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_IN") {
+      console.log("Usuário retornou do Google:", session.user);
+  
+      // Redireciona para preencher os dados complementares
+      window.location.href = "/cadastro-complementar.html";
+    }
+  });
+  </script>  
 <body>
   <div class="container-cadastro">
     <div class="back">
