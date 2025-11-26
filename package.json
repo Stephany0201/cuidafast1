@@ -27,7 +27,7 @@
     "nodemon": "^3.0.2"
   },
   "description": "npm",
-  "main": "public/index.html",
+  "main": "Public/index.html",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/carollicciardii/cuidafast1.git"
