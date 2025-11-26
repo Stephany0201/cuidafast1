@@ -1,4 +1,4 @@
-const supabase = require('./db');
+import supabase from './db.js';
 
 class TokenModel {
   static async create(userId, token) {
@@ -49,5 +49,4 @@ class TokenModel {
   }
 }
 
-module.exports = TokenModel;
-
+export default TokenModel;

@@ -1,4 +1,4 @@
-const supabase = require('./db');
+import supabase from './db.js';
 
 class ClienteModel {
   static async getAll() {
@@ -24,14 +24,17 @@ class ClienteModel {
   static async create(cliente) {
     const { usuario_id, historico_contratacoes, endereco, preferencias } = cliente;
     
+    const insertData = {
+      usuario_id
+    };
+
+    if (historico_contratacoes !== undefined) insertData.historico_contratacoes = historico_contratacoes;
+    if (endereco !== undefined) insertData.endereco = endereco;
+    if (preferencias !== undefined) insertData.preferencias = preferencias;
+    
     const { data, error } = await supabase
       .from('cliente')
-      .insert({
-        usuario_id,
-        historico_contratacoes,
-        endereco,
-        preferencias
-      })
+      .insert(insertData)
       .select('usuario_id')
       .single();
 
@@ -69,5 +72,4 @@ class ClienteModel {
   }
 }
 
-module.exports = ClienteModel;
-
+export default ClienteModel;

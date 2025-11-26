@@ -1,4 +1,4 @@
-const supabase = require('./db');
+import supabase from './db.js';
 
 class UsuarioModel {
   static async getAll() {
@@ -22,7 +22,17 @@ class UsuarioModel {
   }
 
   static async create(usuario) {
-    const { nome, email, senha, telefone, data_nascimento, firebase_uid } = usuario;
+    const { 
+      nome, 
+      email, 
+      senha, 
+      telefone, 
+      data_nascimento, 
+      firebase_uid,
+      tipo,
+      photo_url,
+      auth_uid
+    } = usuario;
 
     const insertData = {
       nome,
@@ -37,6 +47,18 @@ class UsuarioModel {
       insertData.firebase_uid = firebase_uid;
     }
 
+    if (tipo) {
+      insertData.tipo = tipo;
+    }
+
+    if (photo_url) {
+      insertData.photo_url = photo_url;
+    }
+
+    if (auth_uid) {
+      insertData.auth_uid = auth_uid;
+    }
+
     const { data, error } = await supabase
       .from('usuario')
       .insert(insertData)
@@ -48,17 +70,21 @@ class UsuarioModel {
   }
 
   static async update(id, usuario) {
-    const { nome, email, telefone, data_nascimento } = usuario;
+    const { nome, email, telefone, data_nascimento, photo_url, tipo } = usuario;
+    
+    const updateData = {};
+    if (nome !== undefined) updateData.nome = nome;
+    if (email !== undefined) updateData.email = email;
+    if (telefone !== undefined) updateData.telefone = telefone;
+    if (data_nascimento !== undefined) updateData.data_nascimento = data_nascimento;
+    if (photo_url !== undefined) updateData.photo_url = photo_url;
+    if (tipo !== undefined) updateData.tipo = tipo;
+    
+    updateData.data_modificacao = new Date().toISOString();
     
     const { data, error } = await supabase
       .from('usuario')
-      .update({
-        nome,
-        email,
-        telefone,
-        data_nascimento,
-        data_modificacao: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select();
 
@@ -82,6 +108,17 @@ class UsuarioModel {
       .from('usuario')
       .select('*')
       .eq('firebase_uid', uid)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return data || null;
+  }
+
+  static async findByAuthUid(authUid) {
+    const { data, error } = await supabase
+      .from('usuario')
+      .select('*')
+      .eq('auth_uid', authUid)
       .single();
     
     if (error && error.code !== 'PGRST116') throw error;
@@ -118,7 +155,29 @@ class UsuarioModel {
     }
     return usuario;
   }
+
+  static async updateGoogleData(id, authUid, photoUrl) {
+    const updateData = {
+      data_modificacao: new Date().toISOString()
+    };
+
+    if (authUid) {
+      updateData.auth_uid = authUid;
+    }
+
+    if (photoUrl) {
+      updateData.photo_url = photoUrl;
+    }
+
+    const { data, error } = await supabase
+      .from('usuario')
+      .update(updateData)
+      .eq('id', id)
+      .select();
+
+    if (error) throw error;
+    return data ? data.length : 0;
+  }
 }
 
-module.exports = UsuarioModel;
-
+export default UsuarioModel;

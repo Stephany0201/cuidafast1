@@ -1,10 +1,7 @@
 {
   "name": "cuidafast-hub",
   "version": "1.0.0",
-<<<<<<< HEAD
-=======
   "type": "module",
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
   "scripts": {
     "dev": "vercel dev"
   },
@@ -14,42 +11,24 @@
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
-<<<<<<< HEAD
-=======
     "cors": "^2.8.5",
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
     "dayjs": "^1.11.18",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
-<<<<<<< HEAD
-    "serverless-http": "^3.2.0",
-=======
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "mindee": "^4.30.0",
     "moment": "^2.30.1",
-<<<<<<< HEAD
-    "moment-timezone": "^0.6.0"
-=======
     "moment-timezone": "^0.6.0",
     "serverless-http": "^3.2.0"
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
   },
-<<<<<<< HEAD
-  "engines": {
-    "node": "22.x"
-  },
-  "description": "npm",
-  "main": "public/index.html",
-=======
+
   "description": "npm",
   "main": "Public/index.html",
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
   "repository": {
     "type": "git",
     "url": "git+https://github.com/carollicciardii/cuidafast1.git"
@@ -57,11 +36,7 @@
   "author": "cuidafast",
   "license": "ISC",
   "bugs": {
-<<<<<<< HEAD
-    "url": "https://github.com/carollicciardii/cuidafast1"
-=======
     "url": "https://github.com/carollicciardii/cuidafast1/issues"
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
   },
   "homepage": "https://github.com/carollicciardii/cuidafast1#readme"
 }

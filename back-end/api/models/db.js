@@ -1,9 +1,14 @@
-const { createClient } = require('@supabase/supabase-js');
-const path = require('path');
+import { createClient } from '@supabase/supabase-js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Tenta carregar .env do config, mas no Vercel usa variáveis de ambiente direto
 if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config({ path: path.join(__dirname, '../../config/.env') });
+  dotenv.config({ path: path.join(__dirname, '../../config/.env') });
 }
 
 // Configuração para Supabase
@@ -27,4 +32,4 @@ if (process.env.NODE_ENV !== 'production') {
   console.log('✅ Client Supabase inicializado');
 }
 
-module.exports = supabase;
+export default supabase;

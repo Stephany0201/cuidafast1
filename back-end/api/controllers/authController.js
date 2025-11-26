@@ -7,12 +7,9 @@ import TokenModel from '../models/TokenModel.js';
 import ClienteModel from '../models/ClienteModel.js';
 import CuidadorModel from '../models/CuidadorModel.js';
 
-<<<<<<< HEAD
-=======
 /* ------------------------------------------
     CONFIG
 -------------------------------------------*/
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 const ACCESS_EXPIRES = '15m';
 const REFRESH_EXPIRES = '30d';
 const BCRYPT_ROUNDS = 10;
@@ -21,20 +18,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret_in_production';
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true' || false;
 
-<<<<<<< HEAD
-=======
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 /* ------------------------------------------
     SUPABASE CLIENT
 -------------------------------------------*/
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 /* ------------------------------------------
     HELPERS
 -------------------------------------------*/
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 function createAccessToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_EXPIRES });
 }
@@ -43,8 +37,6 @@ function createRefreshToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: REFRESH_EXPIRES });
 }
 
-<<<<<<< HEAD
-=======
 function setRefreshCookie(res, token) {
   const cookie = [
     `refreshToken=${token}`,
@@ -59,7 +51,6 @@ function setRefreshCookie(res, token) {
   res.setHeader('Set-Cookie', cookie.join('; '));
 }
 
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 function validateRegisterBody(data) {
   const errors = [];
 
@@ -79,12 +70,9 @@ function validateRegisterBody(data) {
   return errors;
 }
 
-<<<<<<< HEAD
-=======
 /* ------------------------------------------
     REGISTER TRADICIONAL
 -------------------------------------------*/
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 export const register = async (req, res) => {
   try {
     const body = req.body || {};
@@ -112,34 +100,6 @@ export const register = async (req, res) => {
       senha: hash,
       telefone: telefone || null,
       data_nascimento: data_nascimento || null,
-<<<<<<< HEAD
-    });
-
-    if (tipo === 'cliente') {
-      await ClienteModel.create({
-        usuario_id: userId,
-        historico_contratacoes: null,
-        endereco: null,
-        preferencias: null
-      });
-    }
-
-    if (tipo === 'cuidador') {
-      await CuidadorModel.create({
-        usuario_id: userId,
-        tipos_cuidado: null,
-        descricao: null,
-        valor_hora: null,
-        especialidades: null,
-        experiencia: null,
-        avaliacao: null,
-        horarios_disponiveis: null,
-        idiomas: null,
-        formacao: null,
-        local_trabalho: null,
-        ganhos: null
-      });
-=======
       tipo: tipo || null,
       photo_url: null,
       auth_uid: null
@@ -151,17 +111,11 @@ export const register = async (req, res) => {
 
     if (tipo === 'cuidador') {
       await CuidadorModel.create({ usuario_id: userId });
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
     }
 
     const user = await UsuarioModel.getById(userId);
     delete user.senha;
 
-<<<<<<< HEAD
-    user.tipo = tipo || null;
-
-=======
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
     return res.status(201).json({ user });
 
   } catch (err) {
@@ -170,12 +124,9 @@ export const register = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
-=======
 /* ------------------------------------------
     LOGIN TRADICIONAL
 -------------------------------------------*/
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 export const login = async (req, res) => {
   try {
     const { email, senha } = req.body || {};
@@ -187,10 +138,6 @@ export const login = async (req, res) => {
     if (!match) return res.status(401).json({ message: 'Credenciais inválidas' });
 
     const payload = { id: user.id, email: user.email };
-<<<<<<< HEAD
-
-=======
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
     const accessToken = createAccessToken(payload);
     const refreshToken = createRefreshToken(payload);
 
@@ -199,21 +146,7 @@ export const login = async (req, res) => {
 
     delete user.senha;
 
-<<<<<<< HEAD
-    const cookie = [
-      `refreshToken=${refreshToken}`,
-      `HttpOnly`,
-      `Path=/`,
-      `SameSite=Lax`
-    ];
-
-    if (COOKIE_SECURE) cookie.push('Secure');
-    if (COOKIE_DOMAIN) cookie.push(`Domain=${COOKIE_DOMAIN}`);
-
-    res.setHeader('Set-Cookie', cookie.join('; '));
-=======
     setRefreshCookie(res, refreshToken);
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 
     return res.status(200).json({ accessToken, user });
 
@@ -223,33 +156,23 @@ export const login = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
-=======
 /* ------------------------------------------
     GOOGLE LOGIN (NOVO)
 -------------------------------------------*/
 export const googleLogin = async (req, res) => {
   try {
-    // O front vai mandar o session do Supabase
-    const { access_token } = req.body;
+    const { email, nome, foto_url, tipo_usuario } = req.body || {};
 
-    if (!access_token) {
-      return res.status(400).json({ message: 'Token não enviado' });
+    if (!email) {
+      return res.status(400).json({ message: 'Email obrigatório' });
     }
 
-    // Recupera usuário logado no Supabase
-    const { data, error } = await supabase.auth.getUser(access_token);
-
-    if (error || !data?.user) {
-      return res.status(401).json({ message: 'Falha ao validar token do Google' });
+    if (!supabase) {
+      return res.status(500).json({ message: 'Supabase não configurado' });
     }
 
-    const supaUser = data.user;
-
-    const email = supaUser.email;
-    const nome = supaUser.user_metadata?.full_name || null;
-    const photo_url = supaUser.user_metadata?.avatar_url || null;
-    const auth_uid = supaUser.id;
+    // Valida tipo
+    const tipo = tipo_usuario === 'cuidador' ? 'cuidador' : 'cliente';
 
     // Verifica se já existe no seu DB
     let user = await UsuarioModel.findByEmail(email);
@@ -257,20 +180,36 @@ export const googleLogin = async (req, res) => {
     if (!user) {
       // cria usuário base
       const newId = await UsuarioModel.create({
-        nome,
+        nome: nome || email.split('@')[0],
         email,
         senha: null,
         telefone: null,
         data_nascimento: null,
-        tipo: null,
-        photo_url,
-        auth_uid
+        tipo: tipo,
+        photo_url: foto_url || null,
+        auth_uid: null
       });
 
       user = await UsuarioModel.getById(newId);
+
+      // cria registros complementares conforme tipo
+      if (tipo === 'cliente') {
+        await ClienteModel.create({ usuario_id: newId });
+      } else if (tipo === 'cuidador') {
+        await CuidadorModel.create({ usuario_id: newId });
+      }
     } else {
-      // atualiza auth_uid + foto se mudou
-      await UsuarioModel.updateGoogleData(user.id, auth_uid, photo_url);
+      // atualiza foto se mudou
+      if (foto_url) {
+        await UsuarioModel.update(user.id, {
+          nome: nome || user.nome,
+          email: user.email,
+          telefone: user.telefone,
+          data_nascimento: user.data_nascimento
+        });
+        // Atualiza photo_url diretamente no banco se necessário
+        // Por enquanto, apenas atualiza nome se fornecido
+      }
       user = await UsuarioModel.getById(user.id);
     }
 
@@ -302,7 +241,6 @@ export const googleLogin = async (req, res) => {
 /* ------------------------------------------
     REFRESH
 -------------------------------------------*/
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 export const refresh = async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
@@ -332,12 +270,9 @@ export const refresh = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
-=======
 /* ------------------------------------------
     LOGOUT
 -------------------------------------------*/
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
 export const logout = async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
@@ -346,24 +281,8 @@ export const logout = async (req, res) => {
       await TokenModel.deleteByToken(token);
     }
 
-<<<<<<< HEAD
-    const cookie = [
-      `refreshToken=`,
-      `HttpOnly`,
-      `Path=/`,
-      `SameSite=Lax`,
-      `Max-Age=0`
-    ];
-
-    if (COOKIE_SECURE) cookie.push('Secure');
-    if (COOKIE_DOMAIN) cookie.push(`Domain=${COOKIE_DOMAIN}`);
-
-    res.setHeader('Set-Cookie', cookie.join('; '));
-=======
     // limpa cookie
-    setRefreshCookie(res, '');
-    res.setHeader('Set-Cookie', 'refreshToken=; HttpOnly; Path=/; Max-Age=0;');
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
+    res.setHeader('Set-Cookie', 'refreshToken=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax;');
 
     return res.status(200).json({ message: 'Deslogado' });
 
@@ -372,8 +291,6 @@ export const logout = async (req, res) => {
     return res.status(500).json({ message: 'Erro no servidor' });
   }
 };
-<<<<<<< HEAD
-=======
 
 export default {
   register,
@@ -382,4 +299,3 @@ export default {
   refresh,
   logout
 };
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f

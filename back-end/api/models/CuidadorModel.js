@@ -1,4 +1,4 @@
-const supabase = require('./db');
+import supabase from './db.js';
 
 class CuidadorModel {
   static async getAll() {
@@ -24,22 +24,25 @@ class CuidadorModel {
   static async create(cuidador) {
     const { usuario_id, tipos_cuidado, descricao, valor_hora, especialidades, experiencia, avaliacao, horarios_disponiveis, idiomas, formacao, local_trabalho, ganhos } = cuidador;
     
+    const insertData = {
+      usuario_id
+    };
+
+    if (tipos_cuidado !== undefined) insertData.tipos_cuidado = tipos_cuidado;
+    if (descricao !== undefined) insertData.descricao = descricao;
+    if (valor_hora !== undefined) insertData.valor_hora = valor_hora;
+    if (especialidades !== undefined) insertData.especialidades = especialidades;
+    if (experiencia !== undefined) insertData.experiencia = experiencia;
+    if (avaliacao !== undefined) insertData.avaliacao = avaliacao;
+    if (horarios_disponiveis !== undefined) insertData.horarios_disponiveis = horarios_disponiveis;
+    if (idiomas !== undefined) insertData.idiomas = idiomas;
+    if (formacao !== undefined) insertData.formacao = formacao;
+    if (local_trabalho !== undefined) insertData.local_trabalho = local_trabalho;
+    if (ganhos !== undefined) insertData.ganhos = ganhos;
+    
     const { data, error } = await supabase
       .from('cuidador')
-      .insert({
-        usuario_id,
-        tipos_cuidado,
-        descricao,
-        valor_hora,
-        especialidades,
-        experiencia,
-        avaliacao,
-        horarios_disponiveis,
-        idiomas,
-        formacao,
-        local_trabalho,
-        ganhos
-      })
+      .insert(insertData)
       .select('usuario_id')
       .single();
 
@@ -84,5 +87,4 @@ class CuidadorModel {
   }
 }
 
-module.exports = CuidadorModel;
-
+export default CuidadorModel;
