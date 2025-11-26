@@ -6,7 +6,6 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config({ path: path.join(__dirname, '../../config/.env') });
 }
 
-<<<<<<< HEAD
 // Configuração para Supabase
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
@@ -29,23 +28,3 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = supabase;
-=======
-// Configuração para Supabase PostgreSQL
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
-
-// Teste de conexão
-pool.on('connect', () => {
-  console.log('✅ Conectado ao Supabase PostgreSQL');
-});
-
-pool.on('error', (err) => {
-  console.error('❌ Erro no pool de conexão:', err);
-});
-
-module.exports = pool;
->>>>>>> c10107dbca028a802d851add394a54dc4ae91c7f
