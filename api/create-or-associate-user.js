@@ -1,4 +1,3 @@
-// api/create-or-associate-user.js
 import { createClient } from '@supabase/supabase-js';
 
 // Handler: cria/associa usuário após signUp se user for null
