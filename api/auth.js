@@ -1,3 +1,5 @@
+import authController from '../back-end/api/controllers/authController.js';
+import cadastroController from '../back-end/api/controllers/cadastroController.js';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -8,9 +10,6 @@ const CREATE_USER_SECRET = process.env.CREATE_USER_SECRET;
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY || SUPABASE_SERVICE_ROLE);
 
-/**
- * Handler unificado de Auth
- */
 export default async function handler(req, res) {
   const { method, url } = req;
 
@@ -22,26 +21,26 @@ export default async function handler(req, res) {
   }
 
   // -----------------------
-  // LOGIN / LOGOUT / REGISTER / REFRESH
+  // LOGIN / LOGOUT / REFRESH / GOOGLE LOGIN
   // -----------------------
   if (url.endsWith('/auth/login') && method === 'POST') {
-    return login(req, res);
+    return authController.login(req, res);
   }
   if (url.endsWith('/auth/logout') && method === 'POST') {
-    return logout(req, res);
-  }
-  if (url.endsWith('/auth/register') && method === 'POST') {
-    return register(req, res);
+    return authController.logout(req, res);
   }
   if (url.endsWith('/auth/refresh') && method === 'POST') {
-    return refreshToken(req, res);
+    return authController.refresh(req, res);
+  }
+  if (url.endsWith('/auth/google-login') && method === 'POST') {
+    return authController.googleLogin(req, res);
   }
 
   // -----------------------
-  // GOOGLE LOGIN
+  // REGISTER
   // -----------------------
-  if (url.endsWith('/auth/google-login') && method === 'POST') {
-    return googleLogin(req, res);
+  if (url.endsWith('/auth/register') && method === 'POST') {
+    return cadastroController.register(req, res);
   }
 
   // -----------------------
@@ -58,47 +57,8 @@ export default async function handler(req, res) {
     return createOrAssociateUser(req, res);
   }
 
+  // DEFAULT
   return res.status(404).json({ error: 'Rota não encontrada' });
-}
-
-// -----------------------
-// LOGIN
-// -----------------------
-async function login(req, res) {
-  // implementar login aqui, ou delegar ao authController se existir
-  return res.status(501).json({ error: 'login não implementado' });
-}
-
-// -----------------------
-// LOGOUT
-// -----------------------
-async function logout(req, res) {
-  // implementar logout aqui, ou delegar ao authController
-  return res.status(501).json({ error: 'logout não implementado' });
-}
-
-// -----------------------
-// REGISTER
-// -----------------------
-async function register(req, res) {
-  // implementar registro completo (mesmo fluxo do cadastro.js backend)
-  return res.status(501).json({ error: 'register não implementado' });
-}
-
-// -----------------------
-// REFRESH TOKEN
-// -----------------------
-async function refreshToken(req, res) {
-  // implementar refresh token aqui
-  return res.status(501).json({ error: 'refresh não implementado' });
-}
-
-// -----------------------
-// GOOGLE LOGIN
-// -----------------------
-async function googleLogin(req, res) {
-  // implementar login google
-  return res.status(501).json({ error: 'google-login não implementado' });
 }
 
 // -----------------------
@@ -127,13 +87,7 @@ async function completeProfile(req, res) {
         (saUser.email ? saUser.email.split('@')[0] : null);
     }
 
-    const {
-      usuario_id,
-      nome: nomeDoPayload,
-      email: emailDoPayload,
-      photo_url,
-      ...restBody
-    } = req.body || {};
+    const { usuario_id, nome: nomeDoPayload, email: emailDoPayload, photo_url, ...restBody } = req.body || {};
 
     const allowedColumns = new Set([
       'nome','email','telefone','data_cadastro','ultimo_login',
@@ -233,4 +187,3 @@ async function createOrAssociateUser(req, res) {
     return res.status(500).json({ error: err.message || err });
   }
 }
-  
