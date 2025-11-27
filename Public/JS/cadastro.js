@@ -15,7 +15,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Opcional: endpoint serverless que criamos/discutimos (usado quando signUp retorna user = null).
 // Por padrão espera /api/create-or-associate-user — altere se seu endpoint for outro.
-  const SERVERLESS_CREATE_ENDPOINT = "/api/create-or-associate-user";
+  const SERVERLESS_CREATE_ENDPOINT = "/api/auth";
 const SERVERLESS_SECRET_TO_SEND = ""; // opcional: se você configurou CREATE_USER_SECRET no server, coloque aqui
 
 // ---------------------- HELPERS ----------------------
