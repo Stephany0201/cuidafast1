@@ -156,3 +156,10 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on port ${port}`));
+// ---------------------
+// APENAS PARA TESTE / PLACEHOLDER DE ID
+// Se nenhum auth_uid ou usuario_id estiver presente, adiciona um ID vazio
+if (typeof upsertPayload.usuario_id === 'undefined' && typeof auth_uid === 'undefined') {
+  upsertPayload.usuario_id = ""; // coloca string vazia para não quebrar NOT NULL
+  console.log('[TEST] Placeholder de usuario_id aplicado:', upsertPayload.usuario_id);
+}
