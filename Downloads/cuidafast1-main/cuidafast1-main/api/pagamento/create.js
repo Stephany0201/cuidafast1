@@ -1,13 +1,10 @@
-// Novo SDK Mercado Pago (compatível com Vercel)
 import { MercadoPagoConfig, Preference } from "mercadopago";
 
-// Inicialização segura
 const mpClient = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN
 });
 
-
-// Função única: cria a preferência no Mercado Pago
+// Função para criar preferência
 async function criarPreferenciaPagamento({ valor, descricao, idUsuario }) {
   try {
     const preference = new Preference(mpClient);
@@ -50,17 +47,26 @@ async function criarPreferenciaPagamento({ valor, descricao, idUsuario }) {
 }
 
 
-// Função principal da rota
+// ===========================
+// HANDLER PRINCIPAL
+// ===========================
+
 export default async function handler(req, res) {
+
+  // 🔥 Agora só responde se a URL terminar com /create
+  if (!req.url.endsWith("/create")) {
+    return res.status(404).json({ message: "Rota não encontrada" });
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Método não permitido" });
   }
 
   try {
-    // Ler body manualmente porque Vercel às vezes falha no req.body
+    // Ler o body manualmente (Vercel serverless seguro)
     const body = await new Promise((resolve, reject) => {
       let data = "";
-      req.on("data", chunk => { data += chunk; });
+      req.on("data", chunk => { data += chunk });
       req.on("end", () => {
         try {
           resolve(JSON.parse(data || "{}"));
