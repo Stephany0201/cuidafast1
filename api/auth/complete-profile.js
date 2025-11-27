@@ -1,42 +1,50 @@
-// exemplo Node/Express (server)
+// server.js
 import express from 'express';
-import fetch from 'node-fetch'; // ou use supabase admin SDK
-import jwt from 'jsonwebtoken';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE; // service_role key
-// Ou use supabase-js com service role para validar token e manipular DB
+// (Opcional) CORS se front estiver em domínio diferente
+import cors from 'cors';
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*' // ajuste para domínios permitidos em produção
+}));
 
-// Exemplo usando supabase-js (recomendado)
-import { createClient } from '@supabase/supabase-js';
+// ENV vars (configure no host)
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
+  console.error('Missing SUPABASE env vars. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE.');
+}
+
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
+/**
+ * POST /api/auth/complete-profile
+ * Body: { cpf, data_nascimento, cep, numero, rua, bairro, cidade, estado, complemento }
+ * Header: Authorization: Bearer <access_token>  (opcional; fallback: usuario_id in body)
+ */
 app.post('/api/auth/complete-profile', async (req, res) => {
   try {
-    // 1) Pegar Authorization header
     const authHeader = req.headers.authorization || '';
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
 
-    // 2) Validar token e obter user via Admin
-    // alternativa: supabaseAdmin.auth.getUser(token) (dependendo da lib/version)
-    const { data: { user }, error: userErr } = await supabaseAdmin.auth.getUser(token);
-    if (userErr || !user) {
-      return res.status(401).json({ error: 'Token inválido ou usuário não autenticado' });
+    let auth_uid = null;
+    if (token) {
+      const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+      if (userErr || !userData?.user) {
+        console.warn('getUser error:', userErr, userData);
+        return res.status(401).json({ error: 'Token inválido' });
+      }
+      auth_uid = userData.user.id;
     }
 
-    const auth_uid = user.id;
-
-    // 3) Receber payload
     const {
-      cpf, data_nascimento, cep, numero, rua, bairro, cidade, estado, complemento
-    } = req.body;
-
-    // 4) Upsert (cria ou atualiza) usuario usando auth_uid
-    const upsertPayload = {
-      auth_uid,
+      usuario_id,
       cpf,
       data_nascimento,
       cep,
@@ -46,25 +54,59 @@ app.post('/api/auth/complete-profile', async (req, res) => {
       cidade,
       estado,
       complemento
-      // outros campos que quiser
-    };
+    } = req.body || {};
 
-    // upsert por auth_uid (assumindo constraint unique auth_uid)
-    const { data, error } = await supabaseAdmin
-      .from('usuario')
-      .upsert(upsertPayload, { onConflict: 'auth_uid' })
-      .select()
-      .single();
+    // monta payload sem valores undefined
+    const upsertPayload = {};
+    if (cpf !== undefined) upsertPayload.cpf = cpf;
+    if (data_nascimento !== undefined) upsertPayload.data_nascimento = data_nascimento;
+    if (cep !== undefined) upsertPayload.cep = cep;
+    if (numero !== undefined) upsertPayload.numero = numero;
+    if (rua !== undefined) upsertPayload.rua = rua;
+    if (bairro !== undefined) upsertPayload.bairro = bairro;
+    if (cidade !== undefined) upsertPayload.cidade = cidade;
+    if (estado !== undefined) upsertPayload.estado = estado;
+    if (complemento !== undefined) upsertPayload.complemento = complemento;
 
-    if (error) {
-      return res.status(500).json({ error: 'Erro ao gravar usuário', details: error });
+    if (auth_uid) {
+      upsertPayload.auth_uid = auth_uid;
+      const { data, error } = await supabaseAdmin
+        .from('usuario')
+        .upsert(upsertPayload, { onConflict: 'auth_uid' })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase upsert error:', error);
+        return res.status(500).json({ error: 'Erro ao gravar usuário', details: error });
+      }
+      return res.status(200).json({ user: data });
     }
 
-    return res.json({ user: data });
+    if (usuario_id) {
+      const { data, error } = await supabaseAdmin
+        .from('usuario')
+        .update(upsertPayload)
+        .eq('id', usuario_id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase update error:', error);
+        return res.status(500).json({ error: 'Erro ao atualizar usuário', details: error });
+      }
+      return res.status(200).json({ user: data });
+    }
+
+    return res.status(400).json({ error: 'Sem token nem usuario_id' });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Erro interno' });
+    console.error('complete-profile unexpected error:', err);
+    return res.status(500).json({ error: 'Internal server error', message: err.message });
   }
 });
 
-app.listen(process.env.PORT || 3000);
+// rota simples para health check
+app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
