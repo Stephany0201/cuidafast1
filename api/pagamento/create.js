@@ -1,10 +1,11 @@
-import { criarPagamento } from "./pagamentoController.js";
+import { criarPagamento } from "../../back-end/api/controllers/pagamentoController.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Método não permitido" });
   }
 
+  
   try {
     const body = await new Promise((resolve, reject) => {
       let data = "";

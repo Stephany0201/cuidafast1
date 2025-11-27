@@ -28,9 +28,11 @@ return cadastroController.register(req, res);
 if (url.endsWith('/auth/refresh') && method === 'POST') {
 return authController.refresh(req, res);
 }
-//google
-if (url.endsWith('/auth/google-login') && method === 'POST')
+
+// GOOGLE LOGIN
+if (url.endsWith('/auth/google-login') && method === 'POST') {
 return authController.googleLogin(req, res);
+}
 
 // DEFAULT
 return res.status(404).json({ error: 'Rota não encontrada' });
