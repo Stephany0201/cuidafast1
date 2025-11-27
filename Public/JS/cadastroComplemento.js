@@ -204,3 +204,40 @@ window.supabase = supabase; // expõe para o console (REMOVA depois em produçã
     console.error('[DEBUG] erro ao chamar getSession():', err);
   }
 })();
+// após obter authUid e body
+// tenta extrair nome do payload, do supabase user metadata ou do email
+let nomeFromPayload = req.body.nome ?? null;
+
+// se não veio no payload, extraia do supabase auth (já temos userData se token foi fornecido)
+let nomeToUse = nomeFromPayload;
+
+if (!nomeToUse && auth_uid) {
+  // buscar user no supabase auth
+  try {
+    const { data: userDataRes, error: userErr } = await supabaseAdmin.auth.getUserById
+      ? await supabaseAdmin.auth.getUser(auth_uid) // alguns SDKs têm getUser(id)
+      : await supabaseAdmin.auth.getUser(req.headers.authorization.replace(/^Bearer\s+/i,'').trim()); // fallback
+    const saUser = userDataRes?.user ?? null;
+    if (saUser) {
+      nomeToUse = saUser.user_metadata?.full_name ?? saUser.email?.split('@')[0] ?? null;
+    }
+  } catch (e) {
+    console.warn('Erro ao obter user metadata para nome:', e);
+  }
+}
+
+// se ainda não temos nome, tente recuperar registro existente no banco (buscar por auth_uid)
+if (!nomeToUse && auth_uid) {
+  const { data: existingUser } = await supabaseAdmin
+    .from('usuario')
+    .select('nome')
+    .eq('auth_uid', auth_uid)
+    .single();
+  if (existingUser?.nome) nomeToUse = existingUser.nome;
+}
+
+// por fim, defina um fallback genérico (ex: "Usuário")
+if (!nomeToUse) nomeToUse = req.body.email ? (req.body.email.split('@')[0]) : 'Usuário';
+
+// agora inclua no payload:
+upsertPayload.nome = nomeToUse;

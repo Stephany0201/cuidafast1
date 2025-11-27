@@ -2,17 +2,13 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
-
-// (Opcional) CORS se front estiver em domínio diferente
-import cors from 'cors';
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*' // ajuste para domínios permitidos em produção
-}));
+app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 
 // ENV vars (configure no host)
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -25,7 +21,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
 /**
  * POST /api/auth/complete-profile
- * Body: { cpf, data_nascimento, cep, numero, rua, bairro, cidade, estado, complemento }
+ * Body: { cpf, data_nascimento, cep, numero, rua, bairro, cidade, estado, complemento, nome? }
  * Header: Authorization: Bearer <access_token>  (opcional; fallback: usuario_id in body)
  */
 app.post('/api/auth/complete-profile', async (req, res) => {
@@ -34,13 +30,24 @@ app.post('/api/auth/complete-profile', async (req, res) => {
     const token = authHeader.replace(/^Bearer\s+/i, '').trim();
 
     let auth_uid = null;
+    let nomeFromAuth = null;
+
+    // Se houver token, valida e pega metadata do Supabase Auth (Google)
     if (token) {
       const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
       if (userErr || !userData?.user) {
         console.warn('getUser error:', userErr, userData);
         return res.status(401).json({ error: 'Token inválido' });
       }
-      auth_uid = userData.user.id;
+      const saUser = userData.user;
+      auth_uid = saUser.id;
+
+      // tenta extrair nome do metadata do provedor
+      nomeFromAuth =
+        saUser.user_metadata?.full_name ||
+        saUser.user_metadata?.name ||
+        saUser.user_metadata?.given_name ||
+        (saUser.email ? saUser.email.split('@')[0] : null);
     }
 
     const {
@@ -53,7 +60,10 @@ app.post('/api/auth/complete-profile', async (req, res) => {
       bairro,
       cidade,
       estado,
-      complemento
+      complemento,
+      nome: nomeDoPayload,
+      email: emailDoPayload,
+      photo_url
     } = req.body || {};
 
     // monta payload sem valores undefined
@@ -67,7 +77,16 @@ app.post('/api/auth/complete-profile', async (req, res) => {
     if (cidade !== undefined) upsertPayload.cidade = cidade;
     if (estado !== undefined) upsertPayload.estado = estado;
     if (complemento !== undefined) upsertPayload.complemento = complemento;
+    if (photo_url !== undefined) upsertPayload.photo_url = photo_url;
+    if (emailDoPayload !== undefined) upsertPayload.email = emailDoPayload;
 
+    // garantir que temos um nome — prioridade: payload > auth metadata > email payload > fallback
+    let nomeToUse = nomeDoPayload ?? nomeFromAuth ?? (emailDoPayload ? emailDoPayload.split('@')[0] : null);
+    if (!nomeToUse) nomeToUse = 'Usuário';
+
+    upsertPayload.nome = nomeToUse;
+
+    // preferir fluxo auth_uid (OAuth)
     if (auth_uid) {
       upsertPayload.auth_uid = auth_uid;
       const { data, error } = await supabaseAdmin
@@ -83,6 +102,7 @@ app.post('/api/auth/complete-profile', async (req, res) => {
       return res.status(200).json({ user: data });
     }
 
+    // fallback: atualiza por usuario_id (registro criado via fluxo tradicional)
     if (usuario_id) {
       const { data, error } = await supabaseAdmin
         .from('usuario')
