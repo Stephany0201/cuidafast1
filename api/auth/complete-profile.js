@@ -23,8 +23,9 @@ export default async function handler(req, res) {
 
     let auth_uid = null;
     let nomeFromAuth = null;
+    let emailFromAuth = null;
 
-    // Se houver token, pega ID do Google e nome
+    // Se houver token, pega ID do Google, nome e email
     if (token) {
       const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
       if (userErr || !userData?.user) {
@@ -39,6 +40,8 @@ export default async function handler(req, res) {
         saUser.user_metadata?.name ||
         saUser.user_metadata?.given_name ||
         (saUser.email ? saUser.email.split('@')[0] : null);
+
+      emailFromAuth = saUser.email || null;
     }
 
     let { usuario_id, nome: nomeDoPayload, email: emailDoPayload, photo_url, ...restBody } = req.body || {};
@@ -58,29 +61,40 @@ export default async function handler(req, res) {
       upsertPayload[k] = v;
     }
 
-    if (emailDoPayload) upsertPayload.email = emailDoPayload;
-    if (photo_url) upsertPayload.photo_url = photo_url;
-
-    let nomeToUse = nomeDoPayload ?? nomeFromAuth ?? (emailDoPayload ? emailDoPayload.split('@')[0] : 'Usuário');
+    // Nome
+    const nomeToUse = nomeDoPayload ?? nomeFromAuth ?? 'Usuário';
     upsertPayload.nome = nomeToUse;
 
-    // ---------------------
-    // Colocar UUID do Google em auth_uid, não no id
+    // Photo
+    if (photo_url) upsertPayload.photo_url = photo_url;
+
+    // Email: primeiro do Google, se não tiver, do payload
+    if (emailFromAuth) {
+      upsertPayload.email = emailFromAuth;
+    } else if (emailDoPayload && emailDoPayload.trim() !== '') {
+      upsertPayload.email = emailDoPayload.trim();
+    } else {
+      return res.status(400).json({ error: 'Email é obrigatório' });
+    }
+
+    // auth_uid separado do id INTEGER
     if (auth_uid) {
       upsertPayload.auth_uid = auth_uid;
     }
 
-    // Caso não haja usuario_id, gera fallback de teste (id é INTEGER)
+    // id INTEGER: se não houver, fallback de teste
     if (!usuario_id || usuario_id === '') {
       const randomTestId = Math.floor(Math.random() * 10000) + 1;
-      upsertPayload.id = randomTestId; // apenas para teste
+      upsertPayload.id = randomTestId;
       console.log('[TEST] usando ID aleatório:', randomTestId);
     } else {
-      upsertPayload.id = Number(usuario_id); // garantir INTEGER
+      upsertPayload.id = Number(usuario_id);
+      if (!Number.isInteger(upsertPayload.id)) {
+        return res.status(400).json({ error: 'usuario_id inválido' });
+      }
     }
 
-    // ---------------------
-    // Upsert usando auth_uid como chave se disponível, senão por id
+    // Upsert: se tiver auth_uid, usa como chave; senão id
     const upsertKey = auth_uid ? 'auth_uid' : 'id';
 
     const { data, error } = await supabaseAdmin
@@ -102,24 +116,5 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('complete-profile unexpected error:', err);
     return res.status(500).json({ error: 'Internal server error', message: err.message });
-  }
-}
-// ---------------------
-// Colocar UUID do Google em auth_uid, não no id
-if (auth_uid) {
-  upsertPayload.auth_uid = auth_uid;
-
-  // email vem do Google se existir
-  if (saUser?.email) {
-    upsertPayload.email = saUser.email;
-  }
-}
-
-// Caso não exista email ainda, usar o payload
-if (!upsertPayload.email) {
-  if (emailDoPayload && emailDoPayload.trim() !== '') {
-    upsertPayload.email = emailDoPayload.trim();
-  } else {
-    return res.status(400).json({ error: 'Email é obrigatório' });
   }
 }
