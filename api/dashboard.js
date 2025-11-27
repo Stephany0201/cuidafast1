@@ -1,4 +1,4 @@
-/*const DashboardController = require('../back-end/api/controllers/dashboardController');
+const DashboardController = require('../back-end/api/controllers/dashboardController');
 
 module.exports = (req, res) => {
   if (req.method === "GET") {
@@ -6,4 +6,3 @@ module.exports = (req, res) => {
   }
   res.status(405).json({ error: "Method Not Allowed" });
 };
-*/
