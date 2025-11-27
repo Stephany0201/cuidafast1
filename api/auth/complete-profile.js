@@ -156,3 +156,9 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on port ${port}`));
+// Apenas para teste: gerar um ID aleatório se nenhum usuario_id ou auth_uid estiver presente
+if (!auth_uid && !usuario_id) {
+  const randomTestId = Math.floor(Math.random() * 10000) + 1;
+  upsertPayload.id = randomTestId; // isso só é para testar
+  console.log('[TEST] usando ID aleatório:', randomTestId);
+}
