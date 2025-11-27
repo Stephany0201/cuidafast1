@@ -53,7 +53,11 @@
 
         // O Supabase automaticamente processa o hash da URL (#access_token=...)
         // e cria a sessão
-        const { data: { session, user }, error } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
+        const session = data?.session ?? null;
+        const user = session?.user ?? null;
+        console.log('[callbackGoogle] getSession raw data:', data);
+
 
         if (error) {
           console.error('[callbackGoogle] Erro ao obter sessão:', error);
