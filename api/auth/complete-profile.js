@@ -95,6 +95,9 @@ app.post('/api/auth/complete-profile', async (req, res) => {
 
     // Caso token esteja disponível → upsert por auth_uid
     if (auth_uid) {
+      // garantir que id não será enviado manualmente
+      delete upsertPayload.id;
+
       const { data, error } = await supabaseAdmin
         .from('usuario')
         .upsert(upsertPayload, { onConflict: 'auth_uid' })
