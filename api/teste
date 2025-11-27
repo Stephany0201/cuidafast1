@@ -1,0 +1,126 @@
+C:.
+├───api
+│   │      auth.js
+│   │      create-or-associate-user.js
+│   │      dashboard.js
+│   │      index.js
+│   │      mensagens.js
+│   │      perfil.js
+│   │      teste.js
+│   │      tokens.js
+│   ├───cliente
+│   │      dados.js
+│   ├───notificacoes
+│   │      enviar.js
+│   └───pagamento
+│          create.js
+│           
+├───back-end
+│   ├───api
+│   │   ├───controllers
+│   │   ├───middleware
+│   │   ├───models
+│   │   ├───routes
+│   │   └───services
+│   └───config
+└───Public
+    │       index.html
+    ├───assets
+    │       carol.png
+    │       icone_verde.svg
+    │       Imagem1.png
+    │       Imagem2.png
+    │       Imagen1.jpg
+    │       Logotipo_1_vetorizado.svg
+    │       Logotipo_5_vetorizado.svg
+    │       pascoal.png
+    │       raphael.png
+    │       stephany.png
+    ├───CSS
+    │   │   components.css
+    │   │   header.css
+    │   │   main.css
+    │   │   styles.css
+    │   │   theme.css
+    │   │
+    │   └───pages
+    │           ajuda.css
+    │           cadastro.css
+    │           cadastroComplemento.css
+    │           cadastroComplementoCuidador.css
+    │           cadastrocuidadortipo.css
+    │           configuracao.css
+    │           contratarInTime.css
+    │           dashboard-cuidador.css
+    │           enviardocumentoscuidador.css
+    │           historico.css
+    │           homeCliente.css
+    │           map.css
+    │           mensagens-extra.css
+    │           mensagens.css
+    │           notificacao.css
+    │           notification-styles.css
+    │           pagamento.css
+    │           pagamentointime.css
+    │           pagamentoopcao.css
+    │           pagamentopix.css
+    │           pagamentopixfinalizar.css
+    │           perfilCliente.css
+    │           PerfilClienteEditarEndereco.css
+    │           perfilEditar.css
+    │           servicos.css
+    │           sobrenos.css
+    ├───HTML
+    │       ajuda.html
+    │       atividadeCliente.html
+    │       cadastro.html
+    │       cadastroComplemento.html
+    │       cadastroComplementoCuidador.html
+    │       cadastrocuidadortipo.html
+    │       configuracoes.html
+    │       contratarInTime.html
+    │       cuidaloc.html
+    │       dashboard-cuidador.html
+    │       enviardocumentoscuidador.html
+    │       homeCliente.html
+    │       mensagens.html
+    │       notificacao.html
+    │       Pagamento.html
+    │       pagamentointime.html
+    │       pagamentoopcao.html
+    │       pagamentopix.html
+    │       pagamentopixfinalizar.html
+    │       perfilCliente.html
+    │       PerfilClienteEditarEndereco.html
+    │       perfilClienteEditarInformações.html
+    │       perfilCuidador.html
+    │       PerfilCuidadorEditarInformações.html
+    │       perfilCuidadorPublico.html
+    │       servicos.html
+    │       sobre-nos.html
+    │       solicitacoesServicos.html
+    │       testeServicos.html
+    └───JS
+            ajuda.js
+            auth.js
+            cadastro.js
+            cadastroComplemento.js
+            cadastroComplementoCuidador.js
+            cadastrocuidadortipo.js
+            configuracao.js
+            cuidaloc.js
+            dashboard-cuidador.js
+            firebase-init.js
+            header.js
+            homeCliente.js
+            login.js
+            main.js
+            mensagens.js
+            notificacao.js
+            notificationHelper.js
+            pagamento.js
+            perfilAPI.js
+            perfilCliente.js
+            perfilEditar.js
+            servicos.js
+            servicosManager.js

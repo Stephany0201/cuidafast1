@@ -1,104 +1,78 @@
-const { auth } = require('../services/firebaseAdmin');
-const UsuarioModel = require('../models/UsuarioModel');
+// Espera: POST { email, nome, foto_url, tipo_usuario }
+// Retorna: 201 user criado / 200 user atualizado
 
-// Login com Google via Firebase
-exports.loginGoogle = async (req, res) => {
+import UsuarioModel from '../models/UsuarioModel.js';
+import ClienteModel from '../models/ClienteModel.js';
+import CuidadorModel from '../models/CuidadorModel.js';
+
+export const loginGoogle = async (req, res) => {
   try {
-    const { token, tipo_usuario } = req.body;
+    const { email, nome, foto_url, tipo_usuario } = req.body || {};
 
-    if (!token) {
-      return res.status(400).json({ message: 'Token do Firebase é obrigatório' });
+    if (!email) {
+      return res.status(400).json({ message: 'Email obrigatório' });
     }
 
-    // Verificar token do Firebase
-    const decodedToken = await auth.verifyIdToken(token);
-    const { uid, email, name } = decodedToken;
+    // valida tipo
+    const tipo = tipo_usuario === 'cuidador' ? 'cuidador' : 'cliente';
 
-    // Buscar ou criar usuário no MariaDB
-    let usuario = await UsuarioModel.findByFirebaseUid(uid);
-    
+    // busca por email
+    let usuario = await UsuarioModel.findByEmail(email);
+
     if (!usuario) {
-      // Criar usuário simplificado no MariaDB
+      // cria usuário simplificado no DB
       const userId = await UsuarioModel.create({
-        nome: name || email.split('@')[0],
-        email: email,
-        senha: null, // Firebase users não têm senha no MariaDB
+        nome: nome || email.split('@')[0],
+        email,
+        senha: null,
         telefone: null,
         data_nascimento: null,
-        firebase_uid: uid
+        photo_url: foto_url || null,
+        auth_uid: null,
+        tipo
       });
-      
+
       usuario = await UsuarioModel.getById(userId);
+
+      // cria registros complementares conforme tipo
+      if (tipo === 'cliente') {
+        await ClienteModel.create({ usuario_id: userId });
+      } else if (tipo === 'cuidador') {
+        await CuidadorModel.create({ usuario_id: userId });
+      }
+
+      delete usuario.senha;
+      return res.status(201).json({
+        message: 'Usuário criado via Google',
+        user: usuario
+      });
     }
 
-    // Atualizar último login
-    await UsuarioModel.setLastLogin(usuario.id);
+    // se já existe, atualiza possível foto/tipo
+    await UsuarioModel.updateGoogleData(usuario.id, {
+      photo_url: foto_url || usuario.photo_url,
+      tipo
+    });
 
-    // Remover senha da resposta
+    usuario = await UsuarioModel.getById(usuario.id);
     delete usuario.senha;
 
-    return res.json({
-      message: 'Login realizado com sucesso',
-      user: {
-        ...usuario,
-        tipo_usuario: tipo_usuario || 'cliente'
-      }
+    // atualiza último login (se você tiver função)
+    if (UsuarioModel.setLastLogin) {
+      await UsuarioModel.setLastLogin(usuario.id);
+    }
+
+    return res.status(200).json({
+      message: 'Usuário existente atualizado',
+      user: usuario
     });
 
-  } catch (error) {
-    console.error('Erro no login Google:', error);
-    return res.status(500).json({ 
-      message: 'Erro interno do servidor',
-      error: error.message 
-    });
+  } catch (err) {
+    console.error('cadastroController.loginGoogle error', err);
+    return res.status(500).json({ message: 'Erro interno do servidor' });
   }
 };
 
-// Cadastro de usuário normal (usar authController.register em vez disso)
-exports.cadastrarUsuario = async (req, res) => {
-  try {
-    const { nome, email, senha, telefone, data_nascimento, tipo_usuario } = req.body;
-
-    // Validações básicas
-    if (!nome || !email || !senha) {
-      return res.status(400).json({ message: 'Nome, email e senha são obrigatórios' });
-    }
-
-    // Verificar se email já existe
-    const existingUser = await UsuarioModel.findByEmail(email);
-    if (existingUser) {
-      return res.status(409).json({ message: 'Email já cadastrado' });
-    }
-
-    // Hash da senha
-    const bcrypt = require('bcrypt');
-    const hash = await bcrypt.hash(senha, 10);
-
-    // Criar usuário no MariaDB
-    const userId = await UsuarioModel.create({
-      nome,
-      email,
-      senha: hash,
-      telefone: telefone || null,
-      data_nascimento: data_nascimento || null
-    });
-
-    const usuario = await UsuarioModel.getById(userId);
-    delete usuario.senha; // Não retornar senha
-
-    return res.status(201).json({
-      message: 'Cadastro realizado com sucesso',
-      user: {
-        ...usuario,
-        tipo_usuario: tipo_usuario || 'cliente'
-      }
-    });
-
-  } catch (error) {
-    console.error('Erro no cadastro:', error);
-    return res.status(500).json({ 
-      message: 'Erro interno do servidor',
-      error: error.message 
-    });
-  }
+export default {
+  loginGoogle
 };
