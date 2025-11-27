@@ -4,11 +4,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js";
 /* ================== CONFIG ================== */
 // coloque sua URL/ANON_KEY corretas
 const SUPABASE_URL = "https://omvwicetojhqurdeuequ.supabase.co";
-const SUPABASE_ANON_KEY = "https://omvwicetojhqurdeuequ.supabase.co";
+const SUPABASE_ANON_KEY = "COLE_SUA_ANON_KEY_AQUI";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Endpoint do backend que valida token e faz upsert na tabela usuario
-const API_COMPLETE_PROFILE = window.API_CONFIG?.AUTH ? `${window.API_CONFIG.AUTH}/auth` : "/api/auth";
+const API_COMPLETE_PROFILE = window.API_CONFIG?.AUTH ? `${window.API_CONFIG.AUTH}/complete-profile` : "../JS/complete-profile";
 window.supabase = supabase;
 /* ============== HELPERS ÚTEIS =============== */
 const $ = (id) => document.getElementById(id);
