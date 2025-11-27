@@ -9,7 +9,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Endpoint do backend que valida token e faz upsert na tabela usuario
 const API_COMPLETE_PROFILE = window.API_CONFIG?.AUTH ? `${window.API_CONFIG.AUTH}/complete-profile` : "/api/auth/complete-profile";
-
+window.supabase = supabase;
 /* ============== HELPERS ÚTEIS =============== */
 const $ = (id) => document.getElementById(id);
 const qs = (sel) => document.querySelector(sel);
