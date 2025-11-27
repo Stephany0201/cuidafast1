@@ -21,7 +21,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
 /**
  * POST /api/auth/complete-profile
- * Body: { cpf, data_nascimento, cep, numero, rua, bairro, cidade, estado, complemento, nome? }
+ * Body: { cpf, data_nascimento, cep, numero, rua, bairro, cidade, estado, complemento, nome?, email?, photo_url? }
  * Header: Authorization: Bearer <access_token>  (opcional; fallback: usuario_id in body)
  */
 app.post('/api/auth/complete-profile', async (req, res) => {
@@ -31,6 +31,7 @@ app.post('/api/auth/complete-profile', async (req, res) => {
 
     let auth_uid = null;
     let nomeFromAuth = null;
+    let saUser = null;
 
     // Se houver token, valida e pega metadata do Supabase Auth (Google)
     if (token) {
@@ -39,7 +40,7 @@ app.post('/api/auth/complete-profile', async (req, res) => {
         console.warn('getUser error:', userErr, userData);
         return res.status(401).json({ error: 'Token inválido' });
       }
-      const saUser = userData.user;
+      saUser = userData.user;
       auth_uid = saUser.id;
 
       // tenta extrair nome do metadata do provedor
@@ -50,45 +51,55 @@ app.post('/api/auth/complete-profile', async (req, res) => {
         (saUser.email ? saUser.email.split('@')[0] : null);
     }
 
+    // Destruturação controlada (não pegar senha aqui)
     const {
       usuario_id,
-      cpf,
-      data_nascimento,
-      cep,
-      numero,
-      rua,
-      bairro,
-      cidade,
-      estado,
-      complemento,
       nome: nomeDoPayload,
       email: emailDoPayload,
-      photo_url
+      photo_url,
+      // resto do payload será lido por restBody
+      ...restBody
     } = req.body || {};
 
-    // monta payload sem valores undefined
+    // ---------------------
+    // FILTRAGEM SEGURA DO PAYLOAD (antes do upsert)
+    // ---------------------
+    // Lista de colunas permitidas que existem no DB e que podemos atualizar via frontend
+    const allowedColumns = new Set([
+      'nome','email','telefone','data_cadastro','ultimo_login',
+      'data_nascimento','rg_numero','rg_orgao_emissor','rg_data_emissao',
+      'cpf_numero','rg_status_validacao','cpf_status_validacao',
+      'tipo','auth_uid','photo_url',
+      'cep','numero','rua','bairro','cidade','estado','complemento'
+    ]);
+
+    // monta payload filtrando undefined/null e colunas não permitidas
     const upsertPayload = {};
-    if (cpf !== undefined) upsertPayload.cpf = cpf;
-    if (data_nascimento !== undefined) upsertPayload.data_nascimento = data_nascimento;
-    if (cep !== undefined) upsertPayload.cep = cep;
-    if (numero !== undefined) upsertPayload.numero = numero;
-    if (rua !== undefined) upsertPayload.rua = rua;
-    if (bairro !== undefined) upsertPayload.bairro = bairro;
-    if (cidade !== undefined) upsertPayload.cidade = cidade;
-    if (estado !== undefined) upsertPayload.estado = estado;
-    if (complemento !== undefined) upsertPayload.complemento = complemento;
-    if (photo_url !== undefined) upsertPayload.photo_url = photo_url;
-    if (emailDoPayload !== undefined) upsertPayload.email = emailDoPayload;
+    for (const [k, v] of Object.entries(restBody)) {
+      if (v === undefined || v === null) continue;   // não sobrescrever com null
+      if (!allowedColumns.has(k)) continue;          // ignora keys não permitidas
+      upsertPayload[k] = v;
+    }
+
+    // campos que tratamos separadamente:
+    if (emailDoPayload !== undefined && emailDoPayload !== null) upsertPayload.email = emailDoPayload;
+    if (photo_url !== undefined && photo_url !== null) upsertPayload.photo_url = photo_url;
+
+    // NÃO sobrescrever 'senha' a menos que venha explicitamente e você trate hashing
+    // if (req.body.senha) { upsertPayload.senha = hash(req.body.senha) }
 
     // garantir que temos um nome — prioridade: payload > auth metadata > email payload > fallback
     let nomeToUse = nomeDoPayload ?? nomeFromAuth ?? (emailDoPayload ? emailDoPayload.split('@')[0] : null);
     if (!nomeToUse) nomeToUse = 'Usuário';
-
     upsertPayload.nome = nomeToUse;
 
-    // preferir fluxo auth_uid (OAuth)
+    // se temos auth_uid (OAuth), inclua para upsert por auth_uid
+    if (auth_uid) upsertPayload.auth_uid = auth_uid;
+
+    // ---------------------
+    // FAZER UPSERT ou UPDATE conforme fluxo
+    // ---------------------
     if (auth_uid) {
-      upsertPayload.auth_uid = auth_uid;
       const { data, error } = await supabaseAdmin
         .from('usuario')
         .upsert(upsertPayload, { onConflict: 'auth_uid' })
@@ -102,7 +113,6 @@ app.post('/api/auth/complete-profile', async (req, res) => {
       return res.status(200).json({ user: data });
     }
 
-    // fallback: atualiza por usuario_id (registro criado via fluxo tradicional)
     if (usuario_id) {
       const { data, error } = await supabaseAdmin
         .from('usuario')
