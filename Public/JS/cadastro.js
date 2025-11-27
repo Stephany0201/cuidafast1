@@ -319,7 +319,7 @@ async function loginGoogleSupabase() {
   await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: window.location.origin + "../HTML/callbackGoogle.html"
+      redirectTo: `${window.location.origin}/HTML/callbackGoogle.html`
     }
   });
 }
