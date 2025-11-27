@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.replace(/^Bearer\s+/i, '').trim();
 
-    let idFromGoogle = null;
+    let auth_uid = null;
     let nomeFromAuth = null;
 
     // Se houver token, pega ID do Google e nome
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Token inválido' });
       }
       const saUser = userData.user;
-      idFromGoogle = saUser.id;
+      auth_uid = saUser.id;
 
       nomeFromAuth =
         saUser.user_metadata?.full_name ||
@@ -65,23 +65,27 @@ export default async function handler(req, res) {
     upsertPayload.nome = nomeToUse;
 
     // ---------------------
-    // Aqui vai o ID do usuário: Google ou fallback
-    if (idFromGoogle) {
-      upsertPayload.id = idFromGoogle;
-    } else if (!usuario_id || usuario_id === '') {
-      // fallback de teste, não nulo
+    // Colocar UUID do Google em auth_uid, não no id
+    if (auth_uid) {
+      upsertPayload.auth_uid = auth_uid;
+    }
+
+    // Caso não haja usuario_id, gera fallback de teste (id é INTEGER)
+    if (!usuario_id || usuario_id === '') {
       const randomTestId = Math.floor(Math.random() * 10000) + 1;
-      upsertPayload.id = randomTestId;
+      upsertPayload.id = randomTestId; // apenas para teste
       console.log('[TEST] usando ID aleatório:', randomTestId);
     } else {
-      upsertPayload.id = usuario_id;
+      upsertPayload.id = Number(usuario_id); // garantir INTEGER
     }
 
     // ---------------------
-    // Upsert direto pelo ID
+    // Upsert usando auth_uid como chave se disponível, senão por id
+    const upsertKey = auth_uid ? 'auth_uid' : 'id';
+
     const { data, error } = await supabaseAdmin
       .from('usuario')
-      .upsert(upsertPayload, { onConflict: 'id' })
+      .upsert(upsertPayload, { onConflict: upsertKey })
       .select();
 
     if (error) {
