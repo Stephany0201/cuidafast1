@@ -1,37 +1,38 @@
-import axios from "axios";
-import dotenv from "dotenv";
-dotenv.config();
+import mercadopago from "mercadopago";
 
-// Configura a conexão com a API AbacatePay
-const api = axios.create({
-  baseURL: process.env.ABACATEPAY_URL,
-  headers: {
-    Authorization: `Bearer ${process.env.ABACATEPAY_KEY}`,
-    "Content-Type": "application/json"
-  }
-});
-
-// Função para criar cobrança PIX
-export async function criarCobranca(valor, descricao) {
+export async function criarPreferenciaPagamento({ valor, descricao, idUsuario }) {
   try {
-    const resposta = await api.post("/billing/create", {
-      amount: valor,
-      description: descricao
+    const preference = await mercadopago.preferences.create({
+      items: [
+        {
+          title: descricao,
+          quantity: 1,
+          unit_price: Number(valor),
+          currency_id: "BRL"
+        }
+      ],
+
+      payer: {
+        id: idUsuario || undefined
+      },
+
+      back_urls: {
+        success: process.env.MP_SUCCESS_URL,
+        failure: process.env.MP_FAIL_URL,
+        pending: process.env.MP_PENDING_URL
+      },
+
+      auto_return: "approved"
     });
-    return resposta.data;
-  } catch (erro) {
-    console.error("Erro ao criar cobrança:", erro.response?.data || erro.message);
-    return { error: "Erro ao criar cobrança" };
-  }
-}
 
-// Função para consultar cobrança
-export async function consultarCobranca(id) {
-  try {
-    const resposta = await api.get(`/billing/get?id=${id}`);
-    return resposta.data;
-  } catch (erro) {
-    console.error("Erro ao consultar cobrança:", erro.response?.data || erro.message);
-    return { error: "Erro ao consultar cobrança" };
+    return {
+      success: true,
+      preference_id: preference.body.id,
+      init_point: preference.body.init_point
+    };
+
+  } catch (error) {
+    console.error("Erro ao criar preferência:", error);
+    return { error: true, message: "Erro ao criar preferência" };
   }
 }
