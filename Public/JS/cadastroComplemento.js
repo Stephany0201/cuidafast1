@@ -188,3 +188,19 @@ async function handleSubmit(ev, initialSession) {
     uiBusy(false, submitBtn);
   }
 }
+// DEBUG TEMPORÁRIO - colocar dentro do módulo (cadastroComplemento.js)
+window.supabase = supabase; // expõe para o console (REMOVA depois em produção)
+
+(async () => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    console.log('[DEBUG] supabase.auth.getSession() ->', { data, error });
+    // mostra usuário e token de forma segura (não imprimir token inteiro em produção)
+    const session = data?.session ?? null;
+    console.log('[DEBUG] session present?', !!session);
+    console.log('[DEBUG] user (session.user):', session?.user ?? null);
+    console.log('[DEBUG] access_token (preview):', session?.access_token ? session.access_token.slice(0,20) + '…' : null);
+  } catch (err) {
+    console.error('[DEBUG] erro ao chamar getSession():', err);
+  }
+})();
