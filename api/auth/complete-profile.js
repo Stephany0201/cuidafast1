@@ -9,9 +9,10 @@ const app = express();
 app.use(express.json());
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 
-// ENV vars (configure no host)
+// ENV vars
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
+
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
   console.error('Missing SUPABASE env vars. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE.');
 }
@@ -30,39 +31,32 @@ app.post('/api/auth/complete-profile', async (req, res) => {
 
     let auth_uid = null;
     let nomeFromAuth = null;
-    let saUser = null;
 
-    // Se houver token, valida e pega metadata do Supabase Auth (Google)
+    // Token Supabase Auth
     if (token) {
       const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
       if (userErr || !userData?.user) {
         console.warn('getUser error:', userErr, userData);
         return res.status(401).json({ error: 'Token inválido' });
       }
-      saUser = userData.user;
-      auth_uid = saUser.id;
+      auth_uid = userData.user.id;
 
-      // tenta extrair nome do metadata do provedor
       nomeFromAuth =
-        saUser.user_metadata?.full_name ||
-        saUser.user_metadata?.name ||
-        saUser.user_metadata?.given_name ||
-        (saUser.email ? saUser.email.split('@')[0] : null);
+        userData.user.user_metadata?.full_name ||
+        userData.user.user_metadata?.name ||
+        userData.user.user_metadata?.given_name ||
+        (userData.user.email ? userData.user.email.split('@')[0] : null);
     }
 
-    // Destruturação controlada (não pegar senha aqui)
     const {
       usuario_id,
       nome: nomeDoPayload,
       email: emailDoPayload,
       photo_url,
-      // resto do payload será lido por restBody
       ...restBody
     } = req.body || {};
 
-    // ---------------------
-    // FILTRAGEM SEGURA DO PAYLOAD (antes do upsert)
-    // ---------------------
+    // Campos permitidos
     const allowedColumns = new Set([
       'nome','email','telefone','data_cadastro','ultimo_login',
       'data_nascimento','rg_numero','rg_orgao_emissor','rg_data_emissao',
@@ -71,88 +65,70 @@ app.post('/api/auth/complete-profile', async (req, res) => {
       'cep','numero','rua','bairro','cidade','estado','complemento'
     ]);
 
-    const upsertPayload = {};
+    const payload = {};
     for (const [k, v] of Object.entries(restBody)) {
-      if (v === undefined || v === null) continue;
+      if (v == null) continue;
       if (!allowedColumns.has(k)) continue;
-      upsertPayload[k] = v;
+      payload[k] = v;
     }
 
-    if (emailDoPayload !== undefined && emailDoPayload !== null) upsertPayload.email = emailDoPayload;
-    if (photo_url !== undefined && photo_url !== null) upsertPayload.photo_url = photo_url;
+    if (emailDoPayload) payload.email = emailDoPayload;
+    if (photo_url) payload.photo_url = photo_url;
 
-    // garantir nome
-    let nomeToUse = nomeDoPayload ?? nomeFromAuth ?? (emailDoPayload ? emailDoPayload.split('@')[0] : null);
-    if (!nomeToUse) nomeToUse = 'Usuário';
-    upsertPayload.nome = nomeToUse;
+    // Nome obrigatório
+    let nomeToUse = nomeDoPayload ?? nomeFromAuth ?? (emailDoPayload ? emailDoPayload.split('@')[0] : 'Usuário');
+    payload.nome = nomeToUse;
 
-    // incluir auth_uid se disponível (para upsert por auth_uid)
-    if (auth_uid) upsertPayload.auth_uid = auth_uid;
+    // Inclui auth_uid se houver
+    if (auth_uid) payload.auth_uid = auth_uid;
 
-    // ---------------------
-    // FAZER UPSERT ou UPDATE conforme fluxo
-    // ---------------------
+    // -----------------------
+    // UPDATES / UPSERTS
+    // -----------------------
 
-    // Caso token esteja disponível → upsert por auth_uid
+    // 1️⃣ Atualizar ou criar via token/auth_uid
     if (auth_uid) {
       const { data, error } = await supabaseAdmin
         .from('usuario')
-        .upsert(upsertPayload, { onConflict: 'auth_uid' })
-        .select();
+        .upsert(payload, { onConflict: 'auth_uid' })
+        .select()
+        .single()
+        .catch(err => ({ data: null, error: err }));
 
-      if (error) {
-        console.error('Supabase upsert error:', error);
-        return res.status(500).json({ error: 'Erro ao gravar usuário', details: error });
-      }
-
-      if (!data || data.length === 0) {
-        return res.status(404).json({ error: 'Usuário não encontrado para upsert' });
-      }
-
-      return res.status(200).json({ user: data[0] });
+      if (error) return res.status(500).json({ error: 'Erro ao gravar usuário', details: error });
+      return res.status(200).json({ user: data });
     }
 
-    // Caso não tenha token → atualizar por usuario_id
-    if (usuario_id !== undefined && usuario_id !== null && usuario_id !== '') {
+    // 2️⃣ Atualizar via usuario_id
+    if (usuario_id) {
       const isUuid = typeof usuario_id === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(usuario_id);
-      try {
-        let query;
-        if (isUuid) {
-          query = supabaseAdmin.from('usuario').update(upsertPayload).eq('auth_uid', usuario_id);
-        } else {
-          const idNum = Number(usuario_id);
-          if (!Number.isFinite(idNum) || !Number.isInteger(idNum)) {
-            return res.status(400).json({ error: 'usuario_id inválido' });
-          }
-          query = supabaseAdmin.from('usuario').update(upsertPayload).eq('id', idNum);
-        }
-
-        const { data, error } = await query.select();
-
-        if (error) {
-          console.error('Supabase update error:', error);
-          return res.status(500).json({ error: 'Erro ao atualizar usuário', details: error });
-        }
-
-        if (!data || data.length === 0) {
-          return res.status(404).json({ error: 'Usuário não encontrado para atualização' });
-        }
-
-        return res.status(200).json({ user: data[0] });
-      } catch (err) {
-        console.error('update branch unexpected error:', err);
-        return res.status(500).json({ error: 'Erro interno ao atualizar usuário', message: err.message });
+      let query;
+      if (isUuid) {
+        query = supabaseAdmin.from('usuario').update(payload).eq('auth_uid', usuario_id);
+      } else {
+        const idNum = Number(usuario_id);
+        if (!Number.isInteger(idNum)) return res.status(400).json({ error: 'usuario_id inválido' });
+        query = supabaseAdmin.from('usuario').update(payload).eq('id', idNum);
       }
+
+      const { data, error } = await query.select().single().catch(err => ({ data: null, error: err }));
+      if (error) return res.status(500).json({ error: 'Erro ao atualizar usuário', details: error });
+      if (!data) return res.status(404).json({ error: 'Usuário não encontrado para atualização' });
+      return res.status(200).json({ user: data });
     }
 
-    return res.status(400).json({ error: 'Sem token nem usuario_id' });
+    // 3️⃣ Nenhum token nem usuario_id → criar novo usuário
+    const { data, error } = await supabaseAdmin.from('usuario').insert([payload]).select().single().catch(err => ({ data: null, error: err }));
+    if (error) return res.status(500).json({ error: 'Erro ao criar usuário', details: error });
+    return res.status(200).json({ user: data });
+
   } catch (err) {
     console.error('complete-profile unexpected error:', err);
     return res.status(500).json({ error: 'Internal server error', message: err.message });
   }
 });
 
-// rota simples para health check
+// Health check
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 const port = process.env.PORT || 3000;
