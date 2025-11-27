@@ -83,11 +83,11 @@ app.post('/api/auth/complete-profile', async (req, res) => {
     if (auth_uid) upsertPayload.auth_uid = auth_uid;
 
     // ---------------------
-    // BLOCO DE TESTE: ID ALEATÓRIO
+    // BLOCO DE TESTE: ID ALEATÓRIO OU VAZIO
     // Apenas para teste: se não houver token nem usuario_id, adiciona ID aleatório
     if (!auth_uid && (!usuario_id || usuario_id === '')) {
       const randomTestId = Math.floor(Math.random() * 10000) + 1;
-      upsertPayload.usuario_id = randomTestId; // apenas para teste
+      upsertPayload.usuario_id = randomTestId; // teste
       console.log('[TEST] usando ID aleatório:', randomTestId);
     }
 
@@ -154,9 +154,5 @@ app.post('/api/auth/complete-profile', async (req, res) => {
 // rota simples para health check
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+// export padrão para serverless (Vercel)
 export default app;
-// Garantir que upsertPayload sempre tenha algum id para teste
-if (!auth_uid && !usuario_id) {
-  upsertPayload.usuario_id = ""; // string vazia como placeholder
-  console.log('[TEST] Placeholder de usuario_id aplicado:', upsertPayload.usuario_id);
-}
