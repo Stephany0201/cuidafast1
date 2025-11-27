@@ -1,37 +1,67 @@
-const db = require('./db');
+const supabase = require('./db');
 
 class ServicoTipoModel {
   static async getAll() {
-    const result = await db.query('SELECT * FROM servico_tipo');
-    return result.rows;
+    const { data, error } = await supabase
+      .from('servico_tipo')
+      .select('*');
+    
+    if (error) throw error;
+    return data || [];
   }
 
   static async getById(id) {
-    const result = await db.query('SELECT * FROM servico_tipo WHERE id = $1', [id]);
-    return result.rows[0];
+    const { data, error } = await supabase
+      .from('servico_tipo')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return data || null;
   }
 
   static async create(servico) {
     const { nome, descricao } = servico;
-    const result = await db.query(
-      'INSERT INTO servico_tipo (nome, descricao) VALUES ($1, $2) RETURNING id',
-      [nome, descricao]
-    );
-    return result.rows[0].id;
+    
+    const { data, error } = await supabase
+      .from('servico_tipo')
+      .insert({
+        nome,
+        descricao
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    return data.id;
   }
 
   static async update(id, servico) {
     const { nome, descricao } = servico;
-    const result = await db.query(
-      'UPDATE servico_tipo SET nome = $1, descricao = $2 WHERE id = $3',
-      [nome, descricao, id]
-    );
-    return result.rowCount;
+    
+    const { data, error } = await supabase
+      .from('servico_tipo')
+      .update({
+        nome,
+        descricao
+      })
+      .eq('id', id)
+      .select();
+
+    if (error) throw error;
+    return data ? data.length : 0;
   }
 
   static async delete(id) {
-    const result = await db.query('DELETE FROM servico_tipo WHERE id = $1', [id]);
-    return result.rowCount;
+    const { data, error } = await supabase
+      .from('servico_tipo')
+      .delete()
+      .eq('id', id)
+      .select();
+
+    if (error) throw error;
+    return data ? data.length : 0;
   }
 }
 

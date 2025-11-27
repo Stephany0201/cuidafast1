@@ -1,5 +1,9 @@
 import jwt from 'jsonwebtoken';
+<<<<<<< HEAD
 import bcrypt from 'bcrypt';
+=======
+import bcrypt from 'bcryptjs';
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
 import { createClient } from '@supabase/supabase-js';
 
 import UsuarioModel from '../models/UsuarioModel.js';
@@ -18,13 +22,22 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret_in_production';
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true' || false;
 
+<<<<<<< HEAD
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
+=======
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
 
 /* ------------------------------------------
     SUPABASE CLIENT
 -------------------------------------------*/
+<<<<<<< HEAD
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+=======
+const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
 
 /* ------------------------------------------
     HELPERS
@@ -161,6 +174,7 @@ export const login = async (req, res) => {
 -------------------------------------------*/
 export const googleLogin = async (req, res) => {
   try {
+<<<<<<< HEAD
     // O front vai mandar o session do Supabase
     const { access_token } = req.body;
 
@@ -181,6 +195,20 @@ export const googleLogin = async (req, res) => {
     const nome = supaUser.user_metadata?.full_name || null;
     const photo_url = supaUser.user_metadata?.avatar_url || null;
     const auth_uid = supaUser.id;
+=======
+    const { email, nome, foto_url, tipo_usuario } = req.body || {};
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email obrigatório' });
+    }
+
+    if (!supabase) {
+      return res.status(500).json({ message: 'Supabase não configurado' });
+    }
+
+    // Valida tipo
+    const tipo = tipo_usuario === 'cuidador' ? 'cuidador' : 'cliente';
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
 
     // Verifica se já existe no seu DB
     let user = await UsuarioModel.findByEmail(email);
@@ -188,11 +216,16 @@ export const googleLogin = async (req, res) => {
     if (!user) {
       // cria usuário base
       const newId = await UsuarioModel.create({
+<<<<<<< HEAD
         nome,
+=======
+        nome: nome || email.split('@')[0],
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
         email,
         senha: null,
         telefone: null,
         data_nascimento: null,
+<<<<<<< HEAD
         tipo: null,
         photo_url,
         auth_uid
@@ -202,6 +235,33 @@ export const googleLogin = async (req, res) => {
     } else {
       // atualiza auth_uid + foto se mudou
       await UsuarioModel.updateGoogleData(user.id, auth_uid, photo_url);
+=======
+        tipo: tipo,
+        photo_url: foto_url || null,
+        auth_uid: null
+      });
+
+      user = await UsuarioModel.getById(newId);
+
+      // cria registros complementares conforme tipo
+      if (tipo === 'cliente') {
+        await ClienteModel.create({ usuario_id: newId });
+      } else if (tipo === 'cuidador') {
+        await CuidadorModel.create({ usuario_id: newId });
+      }
+    } else {
+      // atualiza foto se mudou
+      if (foto_url) {
+        await UsuarioModel.update(user.id, {
+          nome: nome || user.nome,
+          email: user.email,
+          telefone: user.telefone,
+          data_nascimento: user.data_nascimento
+        });
+        // Atualiza photo_url diretamente no banco se necessário
+        // Por enquanto, apenas atualiza nome se fornecido
+      }
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
       user = await UsuarioModel.getById(user.id);
     }
 
@@ -274,8 +334,12 @@ export const logout = async (req, res) => {
     }
 
     // limpa cookie
+<<<<<<< HEAD
     setRefreshCookie(res, '');
     res.setHeader('Set-Cookie', 'refreshToken=; HttpOnly; Path=/; Max-Age=0;');
+=======
+    res.setHeader('Set-Cookie', 'refreshToken=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax;');
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
 
     return res.status(200).json({ message: 'Deslogado' });
 

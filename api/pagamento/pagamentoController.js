@@ -1,4 +1,10 @@
-import { criarPreferenciaPagamento } from "../services/mercadoPagoService.js";
+import mercadopago from "mercadopago";
+import { criarPreferenciaPagamento } from "./mercadoPagoService.js";
+
+// Configuração do Mercado Pago
+mercadopago.configure({
+  access_token: process.env.MERCADOPAGO_ACCESS_TOKEN
+});
 
 export async function criarPagamento(dados) {
   try {
@@ -21,3 +27,5 @@ export async function criarPagamento(dados) {
     return { error: true, message: "Erro interno ao criar pagamento" };
   }
 }
+
+

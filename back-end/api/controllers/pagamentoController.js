@@ -1,4 +1,10 @@
+import mercadopago from "mercadopago";
 import { criarPreferenciaPagamento } from "../services/mercadoPagoService.js";
+
+// Configuração do Mercado Pago
+mercadopago.configure({
+  access_token: process.env.MERCADOPAGO_ACCESS_TOKEN
+});
 
 export async function criarPagamento(dados) {
   try {

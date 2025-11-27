@@ -183,6 +183,7 @@
   if (metodo === "pix") {
     const response = await fetch("/api/pagamento/create", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         valor: 105.90,
         descricao: "Serviço CuidaFast",
