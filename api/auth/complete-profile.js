@@ -51,14 +51,7 @@ app.post('/api/auth/complete-profile', async (req, res) => {
     }
 
     // Destruturação controlada (não pegar senha aqui)
-    const {
-      usuario_id,
-      nome: nomeDoPayload,
-      email: emailDoPayload,
-      photo_url,
-      // resto do payload será lido por restBody
-      ...restBody
-    } = req.body || {};
+    let { usuario_id, nome: nomeDoPayload, email: emailDoPayload, photo_url, ...restBody } = req.body || {};
 
     // ---------------------
     // FILTRAGEM SEGURA DO PAYLOAD (antes do upsert)
@@ -90,14 +83,21 @@ app.post('/api/auth/complete-profile', async (req, res) => {
     if (auth_uid) upsertPayload.auth_uid = auth_uid;
 
     // ---------------------
+    // BLOCO DE TESTE: ID ALEATÓRIO
+    // Apenas para teste: se não houver token nem usuario_id, adiciona ID aleatório
+    if (!auth_uid && (!usuario_id || usuario_id === '')) {
+      const randomTestId = Math.floor(Math.random() * 10000) + 1;
+      upsertPayload.usuario_id = randomTestId; // apenas para teste
+      console.log('[TEST] usando ID aleatório:', randomTestId);
+    }
+
+    // ---------------------
     // FAZER UPSERT ou UPDATE conforme fluxo
     // ---------------------
 
     // Caso token esteja disponível → upsert por auth_uid
     if (auth_uid) {
-      // garantir que id não será enviado manualmente
-      delete upsertPayload.id;
-
+      delete upsertPayload.id; // garantir que id não será enviado manualmente
       const { data, error } = await supabaseAdmin
         .from('usuario')
         .upsert(upsertPayload, { onConflict: 'auth_uid' })
@@ -156,9 +156,3 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on port ${port}`));
-// Apenas para teste: gerar um ID aleatório se nenhum usuario_id ou auth_uid estiver presente
-if (!auth_uid && !usuario_id) {
-  const randomTestId = Math.floor(Math.random() * 10000) + 1;
-  upsertPayload.id = randomTestId; // isso só é para testar
-  console.log('[TEST] usando ID aleatório:', randomTestId);
-}
