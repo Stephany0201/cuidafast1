@@ -1,4 +1,4 @@
-import { criarPagamento } from "../../../back-end/api/controllers/pagamentoController.js";
+import { criarPagamento } from "../../back-end/api/controllers/pagamentoController.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
