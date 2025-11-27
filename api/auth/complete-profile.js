@@ -154,9 +154,7 @@ app.post('/api/auth/complete-profile', async (req, res) => {
 // rota simples para health check
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server running on port ${port}`));
-// ---------------------
+export default app;
 // Garantir que upsertPayload sempre tenha algum id para teste
 if (!auth_uid && !usuario_id) {
   upsertPayload.usuario_id = ""; // string vazia como placeholder
