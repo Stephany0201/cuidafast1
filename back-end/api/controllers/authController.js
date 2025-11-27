@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
 
 import UsuarioModel from '../models/UsuarioModel.js';
