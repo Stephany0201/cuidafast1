@@ -92,31 +92,34 @@ app.post('/api/auth/complete-profile', async (req, res) => {
     // ---------------------
     // FAZER UPSERT ou UPDATE conforme fluxo
     // ---------------------
+
+    // Caso token esteja disponível → upsert por auth_uid
     if (auth_uid) {
       const { data, error } = await supabaseAdmin
         .from('usuario')
         .upsert(upsertPayload, { onConflict: 'auth_uid' })
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error('Supabase upsert error:', error);
         return res.status(500).json({ error: 'Erro ao gravar usuário', details: error });
       }
-      return res.status(200).json({ user: data });
+
+      if (!data || data.length === 0) {
+        return res.status(404).json({ error: 'Usuário não encontrado para upsert' });
+      }
+
+      return res.status(200).json({ user: data[0] });
     }
 
-    // Se chegou aqui, não tem token — tente atualizar por usuario_id
+    // Caso não tenha token → atualizar por usuario_id
     if (usuario_id !== undefined && usuario_id !== null && usuario_id !== '') {
-      // detecta se é UUID (32 hex + 4 hyphens) ou inteiro
       const isUuid = typeof usuario_id === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(usuario_id);
       try {
         let query;
         if (isUuid) {
-          // atualizar por auth_uid (UUID)
           query = supabaseAdmin.from('usuario').update(upsertPayload).eq('auth_uid', usuario_id);
         } else {
-          // tratar como inteiro id
           const idNum = Number(usuario_id);
           if (!Number.isFinite(idNum) || !Number.isInteger(idNum)) {
             return res.status(400).json({ error: 'usuario_id inválido' });
@@ -124,12 +127,18 @@ app.post('/api/auth/complete-profile', async (req, res) => {
           query = supabaseAdmin.from('usuario').update(upsertPayload).eq('id', idNum);
         }
 
-        const { data, error } = await query.select().single();
+        const { data, error } = await query.select();
+
         if (error) {
           console.error('Supabase update error:', error);
           return res.status(500).json({ error: 'Erro ao atualizar usuário', details: error });
         }
-        return res.status(200).json({ user: data });
+
+        if (!data || data.length === 0) {
+          return res.status(404).json({ error: 'Usuário não encontrado para atualização' });
+        }
+
+        return res.status(200).json({ user: data[0] });
       } catch (err) {
         console.error('update branch unexpected error:', err);
         return res.status(500).json({ error: 'Erro interno ao atualizar usuário', message: err.message });
