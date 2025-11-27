@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro</title>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../CSS/styles.css">
+  <link rel="stylesheet" href="../CSS/pages/cadastro.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="../assets/icone_verde.svg">
+  <script>
+    window.API_CONFIG = {
+      AUTH: "/api/auth"
+    };
+  </script>
+</head>
+<body>
+  <div class="container-cadastro">
+    <div class="back">
+      <a href="javascript:history.back()" class="back-link">
+        <i class="ph ph-arrow-circle-left"></i>
+    </a>
+    </div>
+    <h1>Cadastre-se</h1>
+<div class="divider"><span>Tipos de conta:</span></div>
+   <div class="toggle-container">
+    <button id="btn-cuidador" class="toggle-button active">Cuidador</button>
+    <button id="btn-cliente" class="toggle-button inactive">Cliente</button>
+  </div>
+
+    <div class="divider"><span>Acesso rápido</span></div>
+
+   <div class="social-icons">
+  <i id="btn-google" class="ph-fill ph-google-logo" title="Google"></i>
+  <i class="ph-fill ph-facebook-logo" title="Facebook"></i>
+  <i class="ph-fill ph-twitter-logo" title="Twitter"></i>
+  <i class="ph-fill ph-squares-four" title="Microsoft"></i>
+</div>
+
+    <div class="divider"><span>Ou</span></div>
+
+    <form id="form-cadastro">
+      <div class="input-group">
+        <input id="input-nome" type="text" placeholder="Nome" required />
+        <input id="input-email" type="email" placeholder="E-mail" required />
+        <input id="input-telefone" type="tel" placeholder="Telefone" />
+        <input id="input-senha" type="password" placeholder="Senha" required />
+        
+      </div>
+      <button type="submit" class="btn">Continuar</button>
+    </form id="form-cadastro">
+  <br>
+    <p class="terms">
+      Ao criar uma conta, você concorda com nossos<br />
+      <a href="#">Termos de Uso</a> e <a href="#">Políticas de Privacidade</a>.
+    </p>
+  </div>
+
+  <!-- Só 1 script no final -->
+  <script type="module" src="../JS/cadastro.js"></script>
+</body>
+</html>

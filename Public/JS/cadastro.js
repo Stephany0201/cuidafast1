@@ -9,13 +9,21 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
 // ---------------------- CONFIGURAÇÃO ----------------------
+<<<<<<< HEAD
+const SUPABASE_URL = "https://kgwepkcxmsoyebxczqwe.supabase.co";
+=======
 const SUPABASE_URL = "https://omvwicetojhqurdeuequ.supabase.co";
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tdndpY2V0b2pocXVyZGV1ZXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0MTI5MTEsImV4cCI6MjA3ODk4ODkxMX0.3XyOux7wjBIC2kIlmdSCTYzznzZOk5tJcHJJMA3Jggc"; // substitua pela sua anon key
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Opcional: endpoint serverless que criamos/discutimos (usado quando signUp retorna user = null).
 // Por padrão espera /api/create-or-associate-user — altere se seu endpoint for outro.
+<<<<<<< HEAD
+const SERVERLESS_CREATE_ENDPOINT = "../../api/create-or-associate-user.js";
+=======
   const SERVERLESS_CREATE_ENDPOINT = "/api/auth";
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
 const SERVERLESS_SECRET_TO_SEND = ""; // opcional: se você configurou CREATE_USER_SECRET no server, coloque aqui
 
 // ---------------------- HELPERS ----------------------
@@ -302,6 +310,10 @@ async function handleFormSubmit(event) {
   }
 }
 
+<<<<<<< HEAD
+// ---------------------- LOGIN GOOGLE via Supabase (OAuth redirect) ----------------------
+=======
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
 async function loginGoogleSupabase() {
   if (!supabase) {
     uiMsg("Supabase não configurado no frontend. Não é possível iniciar OAuth.", "error");
@@ -315,11 +327,18 @@ async function loginGoogleSupabase() {
   localStorage.setItem("cuidafast_tipoRegistro", tipoUsuario);
 
   // Redireciona para o fluxo OAuth do Supabase (configure Redirect URLs no painel Supabase)
+<<<<<<< HEAD
+  await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: window.location.origin + "/callbackGoogle.html"
+=======
   // IMPORTANTE: Configure esta URL no painel do Supabase em Authentication > URL Configuration > Redirect URLs
   await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
       redirectTo: `${window.location.origin}/HTML/callbackGoogle.html`
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
     }
   });
 }

@@ -49,6 +49,12 @@ export const loginGoogle = async (req, res) => {
     }
 
     // se já existe, atualiza possível foto/tipo
+<<<<<<< HEAD
+    await UsuarioModel.updateGoogleData(usuario.id, {
+      photo_url: foto_url || usuario.photo_url,
+      tipo
+    });
+=======
     await UsuarioModel.updateGoogleData(
       usuario.id, 
       null, // auth_uid não disponível aqui
@@ -65,6 +71,7 @@ export const loginGoogle = async (req, res) => {
         tipo: tipo
       });
     }
+>>>>>>> 247f167439afad6341135e5638ae15851c75e252
 
     usuario = await UsuarioModel.getById(usuario.id);
     delete usuario.senha;
