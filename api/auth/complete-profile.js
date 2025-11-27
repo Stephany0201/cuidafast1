@@ -104,3 +104,22 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Internal server error', message: err.message });
   }
 }
+// ---------------------
+// Colocar UUID do Google em auth_uid, não no id
+if (auth_uid) {
+  upsertPayload.auth_uid = auth_uid;
+
+  // email vem do Google se existir
+  if (saUser?.email) {
+    upsertPayload.email = saUser.email;
+  }
+}
+
+// Caso não exista email ainda, usar o payload
+if (!upsertPayload.email) {
+  if (emailDoPayload && emailDoPayload.trim() !== '') {
+    upsertPayload.email = emailDoPayload.trim();
+  } else {
+    return res.status(400).json({ error: 'Email é obrigatório' });
+  }
+}
