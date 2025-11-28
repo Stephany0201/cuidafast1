@@ -36,8 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (currentPath.includes('/HTML/')) {
         pathPrefix = '';
       } else if (currentPath.includes('index.html') || currentPath === '/' || currentPath.endsWith('/')) {
-        pathPrefix = 'front-end/HTML/';
+        // estamos na raiz (index em Public) -> páginas HTML ficam em /HTML
+        pathPrefix = 'HTML/';
       } else {
+        // outras páginas fora de /HTML usam caminho relativo
         pathPrefix = '../HTML/';
       }
 

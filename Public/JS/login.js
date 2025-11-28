@@ -98,7 +98,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Determinar o prefixo correto baseado na localização atual
         if (currentPath.includes('index.html') || currentPath === '/' || currentPath.endsWith('/')) {
-          pathPrefix = 'front-end/HTML/';
+          // raiz do site (Public) -> HTML está em /HTML
+          pathPrefix = 'HTML/';
         } else if (currentPath.includes('/HTML/')) {
           pathPrefix = '';
         } else {
@@ -206,7 +207,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const isIndexPage = window.location.pathname.includes('index.html') || 
                            window.location.pathname === '/' || 
                            window.location.pathname.endsWith('/');
-        window.location.href = isIndexPage ? 'front-end/HTML/homeCliente.html' : '../HTML/homeCliente.html';
+        // da raiz (index em Public) -> /HTML/homeCliente.html, senão caminho relativo
+        window.location.href = isIndexPage ? 'HTML/homeCliente.html' : '../HTML/homeCliente.html';
         
       } catch (error) {
         console.error('[Login] Erro no login com Google:', error);
@@ -345,7 +347,8 @@ function verificarSessaoAtiva() {
       
       if (isIndexPage) {
         console.log('[Login] Redirecionando usuário logado...');
-        const pathPrefix = window.location.pathname.includes('sobre-nos.html') ? '../HTML/' : 'front-end/HTML/';
+        // se estiver em sobre-nos (também em /HTML/), volta um nível; se estiver na raiz, usa /HTML/
+        const pathPrefix = window.location.pathname.includes('sobre-nos.html') ? '../HTML/' : 'HTML/';
         
         if (user.tipo === 'cuidador') {
           window.location.href = pathPrefix + 'dashboard-cuidador.html';

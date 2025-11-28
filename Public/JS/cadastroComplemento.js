@@ -128,13 +128,15 @@ async function handleSubmit(ev, initialSession) {
 
       // sucesso: backend retornou usuario atualizado
       if (result.user) {
-        localStorage.setItem("cuidafast_user", JSON.stringify(result.user));
+        // garantir tipo cliente no objeto salvo
+        const userWithTipo = { ...result.user, tipo: result.user.tipo || 'cliente' };
+        localStorage.setItem("cuidafast_user", JSON.stringify(userWithTipo));
         localStorage.setItem("cuidafast_isLoggedIn", "true");
-        localStorage.setItem("cuidafast_usuario_id", String(result.user.id));
+        localStorage.setItem("cuidafast_usuario_id", String(userWithTipo.id));
       }
 
-      // redireciona para dashboard
-      window.location.href = `${window.location.origin}/dashboard.html`;
+      // redireciona para home do cliente
+      window.location.href = `${window.location.origin}/HTML/homeCliente.html`;
       return;
     }
 
@@ -151,7 +153,8 @@ async function handleSubmit(ev, initialSession) {
         usuario_id: localUser.id,
         cpf,
         data_nascimento: dataNascimento,
-        cep, numero, rua, bairro, cidade, estado, complemento
+        cep, numero, rua, bairro, cidade, estado, complemento,
+        tipo: 'cliente'
       };
 
       const resp = await fetch(API_COMPLETE_PROFILE, {
@@ -169,11 +172,12 @@ async function handleSubmit(ev, initialSession) {
       }
 
       if (result.user) {
-        localStorage.setItem("cuidafast_user", JSON.stringify(result.user));
+        const userWithTipo = { ...result.user, tipo: result.user.tipo || 'cliente' };
+        localStorage.setItem("cuidafast_user", JSON.stringify(userWithTipo));
         localStorage.setItem("cuidafast_isLoggedIn", "true");
       }
-
-      window.location.href = `${window.location.origin}/dashboard.html`;
+      // após complementar cadastro normal de cliente, ir para homeCliente
+      window.location.href = `${window.location.origin}/HTML/homeCliente.html`;
       return;
     }
 
