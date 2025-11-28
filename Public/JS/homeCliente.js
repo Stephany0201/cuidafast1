@@ -483,15 +483,31 @@ function initNotifications() {
 
 function updateNotificationCount() {
     const badge = document.querySelector('.notification-badge');
+    const messageBadge = document.querySelector('.message-badge');
     const navBadges = document.querySelectorAll('.nav-badge');
     
-    // Simular contagem de notificações
-    const notificationCount = Math.floor(Math.random() * 5) + 1;
-    const messageCount = Math.floor(Math.random() * 3) + 1;
+    // Iniciar com contagem zero para novas contas
+    // Em produção, buscar contagem real da API
+    let notificationCount = 0;
+    let messageCount = 0;
+    
+    // Tentar buscar contagem real do localStorage ou API
+    try {
+        const userData = JSON.parse(localStorage.getItem('cuidafast_user') || '{}');
+        // Se houver notificações/mensagens salvas, usar essas contagens
+        // Por enquanto, manter em 0 para novas contas
+    } catch (e) {
+        console.error('Erro ao buscar dados do usuário:', e);
+    }
     
     if (badge) {
         badge.textContent = notificationCount;
         badge.style.display = notificationCount > 0 ? 'block' : 'none';
+    }
+    
+    if (messageBadge) {
+        messageBadge.textContent = messageCount;
+        messageBadge.style.display = messageCount > 0 ? 'block' : 'none';
     }
     
     // Atualizar badges na sidebar
@@ -791,6 +807,7 @@ window.CuidaFastClient = {
       await this.loadUserData();
       this.initLoadMore();
       this.initLogout();
+      this.initBadges(); // Inicializar badges zerados
       console.log('HomeCliente inicializada');
     },
 
@@ -897,6 +914,22 @@ window.CuidaFastClient = {
         messageBtn.addEventListener('click', () => {
           window.location.href = '../HTML/mensagens.html';
         });
+      }
+    },
+
+    // Inicializar badges de notificação e mensagens zerados
+    initBadges() {
+      const notificationBadge = document.querySelector('.notification-badge');
+      const messageBadge = document.querySelector('.message-badge');
+      
+      if (notificationBadge) {
+        notificationBadge.textContent = '0';
+        notificationBadge.style.display = 'none';
+      }
+      
+      if (messageBadge) {
+        messageBadge.textContent = '0';
+        messageBadge.style.display = 'none';
       }
     },
 

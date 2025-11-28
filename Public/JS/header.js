@@ -111,4 +111,37 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = 'mensagens.html';
     });
   }
+
+  // Inicializar badges de notificação e mensagens zerados para novas contas
+  function initBadges() {
+    const notificationBadges = document.querySelectorAll('.notification-badge');
+    const messageBadges = document.querySelectorAll('.message-badge');
+    
+    // Zerar badges de notificação
+    notificationBadges.forEach(badge => {
+      const currentValue = parseInt(badge.textContent) || 0;
+      // Se o badge não foi marcado como dinâmico e tem valor > 0, zerar
+      if (!badge.dataset.dynamic && currentValue > 0) {
+        badge.textContent = '0';
+        badge.style.display = 'none';
+      } else if (currentValue === 0) {
+        // Se já estiver zerado, garantir que está oculto
+        badge.style.display = 'none';
+      }
+    });
+    
+    // Zerar badges de mensagens
+    messageBadges.forEach(badge => {
+      const currentValue = parseInt(badge.textContent) || 0;
+      if (!badge.dataset.dynamic && currentValue > 0) {
+        badge.textContent = '0';
+        badge.style.display = 'none';
+      } else if (currentValue === 0) {
+        badge.style.display = 'none';
+      }
+    });
+  }
+
+  // Inicializar badges ao carregar a página
+  initBadges();
 });
