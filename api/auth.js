@@ -28,6 +28,26 @@ export default async function handler(req, res) {
   }
 
   if (url.endsWith('/auth/google-login') && method === 'POST') {
+    // Parse do body se necessário (Vercel Serverless Functions)
+    if (!req.body || typeof req.body === 'string') {
+      try {
+        const body = await new Promise((resolve, reject) => {
+          let data = '';
+          req.on('data', (chunk) => (data += chunk));
+          req.on('end', () => {
+            try {
+              resolve(data ? JSON.parse(data) : {});
+            } catch (e) {
+              reject(e);
+            }
+          });
+          req.on('error', reject);
+        });
+        req.body = body;
+      } catch (error) {
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
+    }
     return authController.googleLogin(req, res);
   }
 
