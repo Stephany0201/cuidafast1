@@ -13,7 +13,8 @@
 
   <!-- API_CONFIG (seus backends) -->
   <script>
-    window.API_CONFIG = { AUTH: "../../api/auth.js" }; // ou { AUTH: "/api" } se o seu endpoint for /api/register
+    // Backend proxy das rotas de autenticação (/api/auth/*)
+    window.API_CONFIG = { AUTH: "/api/auth" };
   </script>
   
 

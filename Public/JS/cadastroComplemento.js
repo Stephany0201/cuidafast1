@@ -8,7 +8,10 @@ const SUPABASE_ANON_KEY = "COLE_SUA_ANON_KEY_AQUI";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Endpoint do backend que valida token e faz upsert na tabela usuario
-const API_COMPLETE_PROFILE = window.API_CONFIG?.AUTH ? `${window.API_CONFIG.AUTH}/complete-profile` : "/api/auth/complete-profile";
+// Quando API_CONFIG.AUTH existe, usamos proxy /api/auth/complete-profile; senão, chamamos rota direta.
+const API_COMPLETE_PROFILE = window.API_CONFIG?.AUTH
+  ? `${window.API_CONFIG.AUTH}/complete-profile`
+  : "/api/authe/complete-profile";
 window.supabase = supabase;
 /* ============== HELPERS ÚTEIS =============== */
 const $ = (id) => document.getElementById(id);
@@ -128,11 +131,12 @@ async function handleSubmit(ev, initialSession) {
 
       // sucesso: backend retornou usuario atualizado
       if (result.user) {
-        // garantir tipo cliente no objeto salvo
+        const resolvedId = result.user.usuario_id ?? result.user.id;
         const userWithTipo = { ...result.user, tipo: result.user.tipo || 'cliente' };
-        localStorage.setItem("cuidafast_user", JSON.stringify(userWithTipo));
+        const storedUser = { ...result.user, id: resolvedId, usuario_id: resolvedId };
+        localStorage.setItem("cuidafast_user", JSON.stringify(storedUser));
         localStorage.setItem("cuidafast_isLoggedIn", "true");
-        localStorage.setItem("cuidafast_usuario_id", String(userWithTipo.id));
+        localStorage.setItem("cuidafast_usuario_id", String(resolvedId));
       }
 
       // redireciona para home do cliente
@@ -174,6 +178,9 @@ async function handleSubmit(ev, initialSession) {
       if (result.user) {
         const userWithTipo = { ...result.user, tipo: result.user.tipo || 'cliente' };
         localStorage.setItem("cuidafast_user", JSON.stringify(userWithTipo));
+        const resolvedId = result.user.usuario_id ?? result.user.id;
+        const storedUser = { ...result.user, id: resolvedId, usuario_id: resolvedId };
+        localStorage.setItem("cuidafast_user", JSON.stringify(storedUser));
         localStorage.setItem("cuidafast_isLoggedIn", "true");
       }
       // após complementar cadastro normal de cliente, ir para homeCliente
@@ -208,40 +215,3 @@ window.supabase = supabase; // expõe para o console (REMOVA depois em produçã
     console.error('[DEBUG] erro ao chamar getSession():', err);
   }
 })();
-// após obter authUid e body
-// tenta extrair nome do payload, do supabase user metadata ou do email
-let nomeFromPayload = req.body.nome ?? null;
-
-// se não veio no payload, extraia do supabase auth (já temos userData se token foi fornecido)
-let nomeToUse = nomeFromPayload;
-
-if (!nomeToUse && auth_uid) {
-  // buscar user no supabase auth
-  try {
-    const { data: userDataRes, error: userErr } = await supabaseAdmin.auth.getUserById
-      ? await supabaseAdmin.auth.getUser(auth_uid) // alguns SDKs têm getUser(id)
-      : await supabaseAdmin.auth.getUser(req.headers.authorization.replace(/^Bearer\s+/i,'').trim()); // fallback
-    const saUser = userDataRes?.user ?? null;
-    if (saUser) {
-      nomeToUse = saUser.user_metadata?.full_name ?? saUser.email?.split('@')[0] ?? null;
-    }
-  } catch (e) {
-    console.warn('Erro ao obter user metadata para nome:', e);
-  }
-}
-
-// se ainda não temos nome, tente recuperar registro existente no banco (buscar por auth_uid)
-if (!nomeToUse && auth_uid) {
-  const { data: existingUser } = await supabaseAdmin
-    .from('usuario')
-    .select('nome')
-    .eq('auth_uid', auth_uid)
-    .single();
-  if (existingUser?.nome) nomeToUse = existingUser.nome;
-}
-
-// por fim, defina um fallback genérico (ex: "Usuário")
-if (!nomeToUse) nomeToUse = req.body.email ? (req.body.email.split('@')[0]) : 'Usuário';
-
-// agora inclua no payload:
-upsertPayload.nome = nomeToUse;
