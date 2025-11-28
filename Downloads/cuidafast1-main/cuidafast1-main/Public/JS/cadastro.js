@@ -1,11 +1,3 @@
-// cadastro.js
-// Versão revisada — mantém seu fluxo original (POST /api/auth/register) e adiciona
-// fallback/integração com Supabase (anon key) quando necessário.
-// REMOVER referências ao Firebase (feito).
-//
-// AÇÕES NECESSÁRIAS: substitua SUPABASE_ANON_KEY por sua anon key pública.
-// Se usar serverless (recomendado para casos com confirmação por e-mail), veja instruções abaixo.
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
 // ---------------------- CONFIGURAÇÃO ----------------------
