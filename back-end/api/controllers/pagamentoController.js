@@ -17,7 +17,7 @@ export async function criarPagamento(dados) {
     const result = await criarPreferenciaPagamento({
       valor,
       descricao,
-      idUsuario
+      usuario_id
     });
 
     return result;
