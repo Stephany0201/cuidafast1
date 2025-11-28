@@ -39,9 +39,17 @@ export default async function handler(req, res) {
   }
 
   // -----------------------
-  // COMPLETE PROFILE (Supabase OAuth + dados complementares)
+  // COMPLETE PROFILE (Supabase OAuth + dados complementares - Cliente e Cuidador)
   // -----------------------
   if (url.endsWith('/auth/complete-profile') && method === 'POST') {
+    return completeProfile(req, res);
+  }
+
+  // -----------------------
+  // COMPLETE CUIDADOR PROFILE (mantido para compatibilidade - redireciona para complete-profile)
+  // -----------------------
+  if (url.endsWith('/auth/complete-cuidador-profile') && method === 'POST') {
+    // Redireciona para complete-profile mantendo compatibilidade
     return completeProfile(req, res);
   }
 

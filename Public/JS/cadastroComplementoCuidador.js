@@ -99,30 +99,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
       try {
         const API_URL = window.API_CONFIG?.AUTH || "/api/auth";
-        const resp = await fetch(`${API_URL}/google-login`, {
+        
+        // Prepara dados para envio
+        const payload = {
+          usuario_id: existingData.usuario_id || existingData.id,
+          cpf: cpf.replace(/\D/g, ''), // Remove formatação
+          cpf_numero: cpf.replace(/\D/g, ''),
+          data_nascimento: dataNascimento,
+          photo_url: updatedData.photo_url || null
+        };
+
+        console.log('[cadastroComplementoCuidador] Enviando dados:', payload);
+
+        const resp = await fetch(`${API_URL}/complete-profile`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: updatedData.email,
-            nome: updatedData.nome,
-            foto_url: updatedData.photo_url || null,
-            tipo_usuario: updatedData.tipo || 'cuidador',
-            cpf_numero: updatedData.cpf_numero,
-            data_nascimento: updatedData.data_nascimento
-          })
+          body: JSON.stringify(payload)
         });
 
         const resData = await resp.json();
+        
         if (!resp.ok) {
-          alert(resData.message || "Erro ao salvar cadastro complementar.");
+          console.error('[cadastroComplementoCuidador] Erro do backend:', resData);
+          alert(resData.error || resData.message || "Erro ao salvar cadastro complementar.");
           return;
         }
 
-        localStorage.setItem('cuidafast_user', JSON.stringify(updatedData));
+        // Atualiza dados do usuário com a resposta do servidor
+        if (resData.user) {
+          const userData = {
+            ...updatedData,
+            usuario_id: resData.user.usuario_id || resData.user.id,
+            id: resData.user.usuario_id || resData.user.id,
+            cpf_numero: resData.user.cpf || resData.user.cpf_numero,
+            data_nascimento: resData.user.data_nascimento,
+            photo_url: resData.user.photo_url || updatedData.photo_url
+          };
+          localStorage.setItem('cuidafast_user', JSON.stringify(userData));
+          localStorage.setItem('cuidafast_isLoggedIn', 'true');
+        } else {
+          localStorage.setItem('cuidafast_user', JSON.stringify(updatedData));
+        }
+
+        console.log('[cadastroComplementoCuidador] Dados salvos com sucesso');
         window.location.href = 'cadastrocuidadortipo.html';
       } catch (error) {
         console.error('[cadastroComplementoCuidador] erro ao enviar ao backend', error);
-        alert('Erro ao salvar no servidor.');
+        alert('Erro ao salvar no servidor: ' + error.message);
       }
     });
   }

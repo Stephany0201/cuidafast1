@@ -745,7 +745,7 @@ window.CuidaFastClient = {
 };
 
 // ===== HOME CLIENTE (página específica) =====
-// Código migrado do inline script de front-end/HTML/homeCliente.html
+// Código migrado do inline script de ront-end/HTML/homeCliente.html
 // Mantido em namespace para evitar colisões com funções globais existentes aqui.
 
 (function() {
