@@ -60,6 +60,13 @@ export default async function handler(req, res) {
     return createOrAssociateUser(req, res);
   }
 
+  // -----------------------
+  // GET USER DATA (buscar dados completos do usuário do banco)
+  // -----------------------
+  if (url.includes('/auth/user-data') && method === 'GET') {
+    return authController.getUserData(req, res);
+  }
+
   // DEFAULT
   return res.status(404).json({ error: 'Rota não encontrada' });
 }
