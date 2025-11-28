@@ -97,7 +97,9 @@ function initSidebar() {
             email: c.email,
             telefone: c.telefone,
             endereco: c.endereco,
-            photoURL: c.photoURL || null
+            photoURL: c.photoURL || null,
+            precoPorHora: c.precoPorHora || c.preco || (30 + Math.random() * 50), // Preço entre 30 e 80
+            distancia: c.distancia || (Math.random() * 20 + 1) // Distância entre 1 e 21 km
           }));
         
         console.log(`[HomeCliente] ${cuidadores.length} cuidadores cadastrados carregados`);
@@ -350,19 +352,43 @@ function initSidebar() {
     
     // Filtrar por avaliação mínima
     if (filters.rating > 0) {
-      filtered = filtered.filter(c => c.rating >= filters.rating);
+      filtered = filtered.filter(c => (c.rating || 0) >= filters.rating);
     }
     
     // Filtrar por especialidade (se alguma foi selecionada)
+    // Se nenhuma especialidade for selecionada, não filtrar por especialidade
     if (filters.specialties && filters.specialties.length > 0) {
       filtered = filtered.filter(c => {
-        const specialty = c.specialty.toLowerCase();
+        const specialty = (c.specialty || '').toLowerCase();
         return filters.specialties.some(s => {
-          if (s === 'elderly') return specialty.includes('idoso');
-          if (s === 'childcare') return specialty.includes('infantil') || specialty.includes('criança');
-          if (s === 'petcare') return specialty.includes('pet');
+          if (s === 'elderly') return specialty.includes('idoso') || specialty.includes('idosos') || specialty.includes('idoso') || specialty.includes('idos');
+          if (s === 'childcare') return specialty.includes('infantil') || specialty.includes('criança') || specialty.includes('crianças') || specialty.includes('crianç');
+          if (s === 'petcare') return specialty.includes('pet') || specialty.includes('animal') || specialty.includes('animais');
           return false;
         });
+      });
+    }
+    
+    // Filtrar por preço (minPrice e maxPrice)
+    if (filters.minPrice !== undefined && filters.minPrice !== null) {
+      filtered = filtered.filter(c => {
+        const preco = c.precoPorHora || c.preco || 0;
+        return preco >= filters.minPrice;
+      });
+    }
+    
+    if (filters.maxPrice !== undefined && filters.maxPrice !== null && filters.maxPrice < 999) {
+      filtered = filtered.filter(c => {
+        const preco = c.precoPorHora || c.preco || 0;
+        return preco <= filters.maxPrice;
+      });
+    }
+    
+    // Filtrar por distância máxima
+    if (filters.distance !== undefined && filters.distance !== null && filters.distance < 50) {
+      filtered = filtered.filter(c => {
+        const distancia = c.distancia || 0;
+        return distancia <= filters.distance;
       });
     }
     
@@ -376,10 +402,19 @@ function initSidebar() {
     console.log(`[CuidaFast] ${filtered.length} cuidadores após filtros`);
   }
 
+  // Função para limpar todos os filtros
+  function clearFilters() {
+    console.log('[CuidaFast] Limpando todos os filtros');
+    caregiversState.filtered = null;
+    caregiversState.page = 0;
+    renderNextPage(true);
+  }
+
   // Expor para console (opcional)
   window.CuidaFast = window.CuidaFast || {};
   window.CuidaFast.filterCards = filterCards;
   window.CuidaFast.applyAdvancedFilters = applyAdvancedFilters;
+  window.CuidaFast.clearFilters = clearFilters;
 })();
 
 
@@ -1045,14 +1080,20 @@ window.CuidaFastClient = {
       return;
     }
     
+    // Aguardar Bootstrap estar disponível
     if (typeof bootstrap === 'undefined') {
-      console.error('Bootstrap não está carregado');
+      console.warn('Bootstrap não está carregado ainda, tentando novamente...');
+      setTimeout(initFilterModal, 100);
       return;
     }
     
     let filterModal;
     try {
-      filterModal = new bootstrap.Modal(filterModalEl);
+      filterModal = new bootstrap.Modal(filterModalEl, {
+        backdrop: true,
+        keyboard: true,
+        focus: true
+      });
       console.log('Modal Bootstrap criado com sucesso');
     } catch (error) {
       console.error('Erro ao inicializar modal Bootstrap:', error);
@@ -1128,7 +1169,7 @@ window.CuidaFastClient = {
     // Limpar filtros
     if (clearFiltersBtn) {
       clearFiltersBtn.addEventListener('click', function() {
-        // Resetar todos os filtros
+        // Resetar todos os filtros no modal
         if (ratingRange) ratingRange.value = 4;
         if (ratingValue) ratingValue.textContent = '4.0';
         if (distanceRange) distanceRange.value = 15;
@@ -1136,8 +1177,34 @@ window.CuidaFastClient = {
         if (minPrice) minPrice.value = '20';
         if (maxPrice) maxPrice.value = '80';
         
+        // Desmarcar todos os checkboxes de especialidade
+        const specialtyCheckboxes = document.querySelectorAll('#filterModal input[type="checkbox"]');
+        specialtyCheckboxes.forEach(cb => {
+          cb.checked = false; // Desmarcar todos para mostrar todos os cuidadores
+        });
+        
         // Atualizar estrelas
         updateStars(4);
+        
+        // Remover filtros aplicados e mostrar todos os cuidadores
+        // Resetar o estado de filtros
+        if (window.CuidaFast) {
+          // Limpar filtros aplicados
+          if (typeof window.CuidaFast.clearFilters === 'function') {
+            window.CuidaFast.clearFilters();
+          } else {
+            // Fallback: aplicar filtros vazios
+            if (typeof window.CuidaFast.applyAdvancedFilters === 'function') {
+              window.CuidaFast.applyAdvancedFilters({
+                rating: 0,
+                distance: 50,
+                minPrice: 0,
+                maxPrice: 999,
+                specialties: [] // Sem filtro de especialidade
+              });
+            }
+          }
+        }
         
         console.log('Filtros limpos');
       });
