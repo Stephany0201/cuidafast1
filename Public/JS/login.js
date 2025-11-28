@@ -145,29 +145,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tdndpY2V0b2pocXVyZGV1ZXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0MTI5MTEsImV4cCI6MjA3ODk4ODkxMX0.3XyOux7wjBIC2kIlmdSCTYzznzZOk5tJcHJJMA3Jggc";
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // Verificar se já existe uma sessão ativa
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionData?.session?.user) {
-          // Já existe uma sessão, usar ela
-          const user = sessionData.session.user;
-          await processarLoginGoogle(user, supabase);
-        } else {
-          // Iniciar OAuth com Google
-          // Para login, não precisamos definir tipo (será detectado do banco)
-          const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              redirectTo: `${window.location.origin}/HTML/callbackGoogleLogin.html`
-            }
-          });
-          
-          if (error) {
-            console.error('[Login] Erro ao iniciar OAuth:', error);
-            alert('❌ Erro ao iniciar login com Google: ' + error.message);
+        // Sempre iniciar OAuth com Google (mesmo fluxo do cadastro)
+        // O callback processará tudo corretamente
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/HTML/callbackGoogleLogin.html`
           }
-          // O redirecionamento será feito automaticamente pelo Supabase
+        });
+        
+        if (error) {
+          console.error('[Login] Erro ao iniciar OAuth:', error);
+          alert('❌ Erro ao iniciar login com Google: ' + error.message);
         }
+        // O redirecionamento será feito automaticamente pelo Supabase
         
       } catch (error) {
         console.error('[Login] Erro no login com Google:', error);
@@ -177,96 +168,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('[Login] Botão de login com Google configurado');
   } else {
     console.warn('[Login] Botão de login com Google não encontrado');
-  }
-  
-  // Função auxiliar para processar login com Google
-  async function processarLoginGoogle(user, supabase) {
-    try {
-      console.log('[Login] Processando login com Google para:', user.email);
-      
-      // Buscar tipo do usuário no banco (ou usar padrão cliente)
-      const API_URL = window.API_CONFIG?.AUTH || '/api/auth';
-      
-      // Preparar dados do usuário
-      const userData = {
-        email: user.email,
-        nome: user.user_metadata?.full_name || user.email.split('@')[0],
-        foto_url: user.user_metadata?.avatar_url || null,
-        tipo_usuario: 'cliente' // Padrão, será atualizado pelo backend se existir
-      };
-      
-      // Chamar backend para login/criação
-      const response = await fetch(`${API_URL}/google-login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData)
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        console.warn('[Login] Backend retornou erro:', data.message);
-        // Mesmo com erro, podemos continuar com dados do Supabase
-      }
-      
-      // Preparar dados finais do usuário
-      const finalUserData = {
-        id: data.user?.usuario_id || data.user?.id || user.id,
-        usuario_id: data.user?.usuario_id || data.user?.id || user.id,
-        nome: data.user?.nome || userData.nome,
-        email: user.email,
-        telefone: data.user?.telefone || null,
-        tipo: data.user?.tipo || 'cliente',
-        photoURL: userData.foto_url,
-        primeiroNome: (data.user?.nome || userData.nome).split(' ')[0],
-        auth_uid: user.id,
-        loginGoogle: true
-      };
-      
-      // Salvar no localStorage
-      localStorage.setItem('cuidafast_user', JSON.stringify(finalUserData));
-      localStorage.setItem('cuidafast_isLoggedIn', 'true');
-      
-      // Salvar token de acesso se fornecido
-      if (data.accessToken) {
-        localStorage.setItem('cuidafast_token', data.accessToken);
-      }
-      
-      // Fechar modal
-      const loginModal = document.getElementById('loginModal') || document.getElementById('loginModalSobre');
-      if (loginModal) {
-        const modalInstance = bootstrap.Modal.getInstance(loginModal);
-        if (modalInstance) modalInstance.hide();
-      }
-      
-      // Redirecionar baseado no tipo
-      alert(`✅ Bem-vindo(a), ${finalUserData.primeiroNome}!`);
-      
-      setTimeout(() => {
-        const currentPath = window.location.pathname;
-        let pathPrefix = '';
-        
-        if (currentPath.includes('index.html') || currentPath === '/' || currentPath.endsWith('/')) {
-          pathPrefix = 'HTML/';
-        } else if (currentPath.includes('/HTML/')) {
-          pathPrefix = '';
-        } else {
-          pathPrefix = '../HTML/';
-        }
-        
-        if (finalUserData.tipo === 'cuidador') {
-          window.location.href = pathPrefix + 'dashboard-cuidador.html';
-        } else {
-          window.location.href = pathPrefix + 'homeCliente.html';
-        }
-      }, 500);
-      
-    } catch (error) {
-      console.error('[Login] Erro ao processar login Google:', error);
-      throw error;
-    }
   }
 });
 
