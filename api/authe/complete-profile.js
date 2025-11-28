@@ -84,16 +84,20 @@ export default async function handler(req, res) {
     } = req.body || {};
 
     // Detecta tipo de usuário
-    // 1. Pelo campo tipo explícito
+    // 1. Pelo campo tipo explícito (prioridade máxima)
     // 2. Pela presença de dados específicos do cuidador
     // 3. Pelo tipo do usuário existente no banco
     let userType = tipo;
+    
+    console.log('[complete-profile] Tipo recebido no payload:', tipo);
+    console.log('[complete-profile] usuario_id recebido:', usuario_id);
     
     // Se não tiver tipo explícito, tenta detectar pelos dados
     if (!userType) {
       if (tipos_cuidado || descricao || valor_hora || especialidades || experiencia || 
           horarios_disponiveis || idiomas || formacao || local_trabalho) {
         userType = 'cuidador';
+        console.log('[complete-profile] Tipo detectado como cuidador pelos dados específicos');
       }
     }
 
@@ -103,19 +107,23 @@ export default async function handler(req, res) {
         const numericUsuarioId = Number(usuario_id);
         if (Number.isInteger(numericUsuarioId)) {
           const usuarioExistente = await UsuarioModel.getById(numericUsuarioId);
-          if (usuarioExistente) {
-            userType = usuarioExistente.tipo || 'cliente';
+          if (usuarioExistente && usuarioExistente.tipo) {
+            userType = usuarioExistente.tipo;
+            console.log('[complete-profile] Tipo obtido do banco:', userType);
           }
         }
       } catch (err) {
-        console.warn('Erro ao buscar tipo do usuário:', err);
+        console.warn('[complete-profile] Erro ao buscar tipo do usuário:', err);
       }
     }
 
     // Se ainda não tiver tipo, assume cliente (padrão)
     if (!userType) {
       userType = 'cliente';
+      console.log('[complete-profile] Tipo padrão (cliente) aplicado');
     }
+    
+    console.log('[complete-profile] Tipo final determinado:', userType);
 
     // Prepara dados para atualização do usuário
     const allowedColumns = new Set([
@@ -200,21 +208,42 @@ export default async function handler(req, res) {
     // FLUXO 1: Se tiver usuario_id, usa Models (cadastro tradicional)
     if (numericUsuarioId) {
       // Verifica se o usuário existe
-      const usuario = await UsuarioModel.getById(numericUsuarioId);
+      let usuario;
+      try {
+        usuario = await UsuarioModel.getById(numericUsuarioId);
+      } catch (err) {
+        console.error('Erro ao buscar usuário:', err);
+        return res.status(500).json({ error: 'Erro ao buscar usuário no banco de dados' });
+      }
+      
       if (!usuario) {
         return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+      
+      // Se o usuário já tem tipo definido e não foi passado no payload, usa o tipo existente
+      if (!userType && usuario.tipo) {
+        userType = usuario.tipo;
       }
 
       // Atualiza dados do usuário usando Model
       const updateUsuario = {
-        ...upsertPayload,
         tipo: userType
       };
       
-      // Remove campos que não devem ser atualizados via Model.update
-      delete updateUsuario.usuario_id;
-      delete updateUsuario.auth_uid;
-      delete updateUsuario.email; // Email geralmente não muda após criação
+      // Adiciona campos permitidos do upsertPayload
+      if (upsertPayload.nome) updateUsuario.nome = upsertPayload.nome;
+      if (upsertPayload.telefone !== undefined) updateUsuario.telefone = upsertPayload.telefone;
+      if (upsertPayload.data_nascimento) updateUsuario.data_nascimento = upsertPayload.data_nascimento;
+      if (upsertPayload.photo_url) updateUsuario.photo_url = upsertPayload.photo_url;
+      if (upsertPayload.cpf) updateUsuario.cpf = upsertPayload.cpf;
+      if (upsertPayload.cpf_numero) updateUsuario.cpf_numero = upsertPayload.cpf_numero;
+      if (upsertPayload.cep) updateUsuario.cep = upsertPayload.cep;
+      if (upsertPayload.numero) updateUsuario.numero = upsertPayload.numero;
+      if (upsertPayload.rua) updateUsuario.rua = upsertPayload.rua;
+      if (upsertPayload.bairro) updateUsuario.bairro = upsertPayload.bairro;
+      if (upsertPayload.cidade) updateUsuario.cidade = upsertPayload.cidade;
+      if (upsertPayload.estado) updateUsuario.estado = upsertPayload.estado;
+      if (upsertPayload.complemento) updateUsuario.complemento = upsertPayload.complemento;
       
       if (Object.keys(updateUsuario).length > 0) {
         await UsuarioModel.update(numericUsuarioId, updateUsuario);
@@ -227,65 +256,89 @@ export default async function handler(req, res) {
 
       // Atualiza tabela específica conforme tipo
       if (userType === 'cuidador') {
-        const cuidadorData = {};
-        if (tipos_cuidado !== undefined) cuidadorData.tipos_cuidado = tipos_cuidado;
-        if (descricao !== undefined) cuidadorData.descricao = descricao;
-        if (valor_hora !== undefined) cuidadorData.valor_hora = valor_hora;
-        if (especialidades !== undefined) cuidadorData.especialidades = especialidades;
-        if (experiencia !== undefined) cuidadorData.experiencia = experiencia;
-        if (horarios_disponiveis !== undefined) cuidadorData.horarios_disponiveis = horarios_disponiveis;
-        if (idiomas !== undefined) cuidadorData.idiomas = idiomas;
-        if (formacao !== undefined) cuidadorData.formacao = formacao;
-        if (local_trabalho !== undefined) cuidadorData.local_trabalho = local_trabalho;
+        try {
+          const cuidadorData = {};
+          if (tipos_cuidado !== undefined && tipos_cuidado !== null) cuidadorData.tipos_cuidado = tipos_cuidado;
+          if (descricao !== undefined && descricao !== null) cuidadorData.descricao = descricao;
+          if (valor_hora !== undefined && valor_hora !== null) cuidadorData.valor_hora = valor_hora;
+          if (especialidades !== undefined && especialidades !== null) cuidadorData.especialidades = especialidades;
+          if (experiencia !== undefined && experiencia !== null) cuidadorData.experiencia = experiencia;
+          if (horarios_disponiveis !== undefined && horarios_disponiveis !== null) cuidadorData.horarios_disponiveis = horarios_disponiveis;
+          if (idiomas !== undefined && idiomas !== null) cuidadorData.idiomas = idiomas;
+          if (formacao !== undefined && formacao !== null) cuidadorData.formacao = formacao;
+          if (local_trabalho !== undefined && local_trabalho !== null) cuidadorData.local_trabalho = local_trabalho;
 
-        const cuidadorExistente = await CuidadorModel.getById(numericUsuarioId);
-        
-        if (cuidadorExistente) {
-          if (Object.keys(cuidadorData).length > 0) {
-            await CuidadorModel.update(numericUsuarioId, cuidadorData);
+          const cuidadorExistente = await CuidadorModel.getById(numericUsuarioId);
+          
+          if (cuidadorExistente) {
+            if (Object.keys(cuidadorData).length > 0) {
+              await CuidadorModel.update(numericUsuarioId, cuidadorData);
+            }
+          } else {
+            await CuidadorModel.create({
+              usuario_id: numericUsuarioId,
+              ...cuidadorData
+            });
           }
-        } else {
-          await CuidadorModel.create({
-            usuario_id: numericUsuarioId,
-            ...cuidadorData
-          });
+        } catch (err) {
+          console.error('Erro ao atualizar/criar cuidador:', err);
+          // Não retorna erro aqui, apenas loga, pois o usuário já foi atualizado
         }
       } else if (userType === 'cliente') {
-        // Atualiza dados do cliente se necessário
-        const clienteData = {};
-        if (historico_contratacoes !== undefined) clienteData.historico_contratacoes = historico_contratacoes;
-        if (preferencias !== undefined) clienteData.preferencias = preferencias;
-        if (endereco !== undefined) clienteData.endereco = endereco;
+        try {
+          // Atualiza dados do cliente se necessário
+          const clienteData = {};
+          if (historico_contratacoes !== undefined && historico_contratacoes !== null) clienteData.historico_contratacoes = historico_contratacoes;
+          if (preferencias !== undefined && preferencias !== null) clienteData.preferencias = preferencias;
+          if (endereco !== undefined && endereco !== null) clienteData.endereco = endereco;
 
-        const clienteExistente = await ClienteModel.getById(numericUsuarioId);
-        
-        if (clienteExistente) {
-          if (Object.keys(clienteData).length > 0) {
-            await ClienteModel.update(numericUsuarioId, clienteData);
+          const clienteExistente = await ClienteModel.getById(numericUsuarioId);
+          
+          if (clienteExistente) {
+            if (Object.keys(clienteData).length > 0) {
+              await ClienteModel.update(numericUsuarioId, clienteData);
+            }
+          } else {
+            await ClienteModel.create({
+              usuario_id: numericUsuarioId,
+              ...clienteData
+            });
           }
-        } else {
-          await ClienteModel.create({
-            usuario_id: numericUsuarioId,
-            ...clienteData
-          });
+        } catch (err) {
+          console.error('Erro ao atualizar/criar cliente:', err);
+          // Não retorna erro aqui, apenas loga, pois o usuário já foi atualizado
         }
       }
 
       // Retorna dados atualizados
-      const usuarioAtualizado = await UsuarioModel.getById(numericUsuarioId);
-      delete usuarioAtualizado.senha;
+      let usuarioAtualizado;
+      try {
+        usuarioAtualizado = await UsuarioModel.getById(numericUsuarioId);
+        if (!usuarioAtualizado) {
+          return res.status(404).json({ error: 'Usuário não encontrado após atualização' });
+        }
+        delete usuarioAtualizado.senha;
+      } catch (err) {
+        console.error('Erro ao buscar usuário atualizado:', err);
+        return res.status(500).json({ error: 'Erro ao buscar dados atualizados do usuário' });
+      }
 
       const responseData = {
         message: `Dados do ${userType} atualizados com sucesso`,
         user: usuarioAtualizado
       };
 
-      if (userType === 'cuidador') {
-        const cuidadorAtualizado = await CuidadorModel.getById(numericUsuarioId);
-        responseData.cuidador = cuidadorAtualizado;
-      } else if (userType === 'cliente') {
-        const clienteAtualizado = await ClienteModel.getById(numericUsuarioId);
-        responseData.cliente = clienteAtualizado;
+      try {
+        if (userType === 'cuidador') {
+          const cuidadorAtualizado = await CuidadorModel.getById(numericUsuarioId);
+          responseData.cuidador = cuidadorAtualizado;
+        } else if (userType === 'cliente') {
+          const clienteAtualizado = await ClienteModel.getById(numericUsuarioId);
+          responseData.cliente = clienteAtualizado;
+        }
+      } catch (err) {
+        console.warn('Erro ao buscar dados específicos do tipo:', err);
+        // Não falha a requisição, apenas não retorna os dados específicos
       }
 
       return res.status(200).json(responseData);

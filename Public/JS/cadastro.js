@@ -201,12 +201,15 @@ async function handleFormSubmit(event) {
 
         console.log("[Cadastro] Usuário cadastrado com sucesso. Redirecionando...");
         
-        // redireciona conforme tipo
-        if (tipoUsuario === "cuidador") {
-          window.location.href = "../HTML/cadastroComplementoCuidador.html";
-        } else {
-          window.location.href = "../HTML/cadastroComplemento.html";
-        }
+        // Pequeno delay para garantir que localStorage foi salvo
+        setTimeout(() => {
+          // redireciona conforme tipo
+          if (tipoUsuario === "cuidador") {
+            window.location.href = "../HTML/cadastroComplementoCuidador.html";
+          } else {
+            window.location.href = "../HTML/cadastroComplemento.html";
+          }
+        }, 100);
         return;
       } else {
         // response não ok -> mostrar msg e tentar fallback se supabase configurado
@@ -330,12 +333,15 @@ async function handleFormSubmit(event) {
     localStorage.setItem("cuidafast_user", JSON.stringify(userData));
     localStorage.setItem("cuidafast_isLoggedIn", "true");
 
-    // redireciona para complemento conforme tipo
-    if (tipoUsuario === "cuidador") {
-      window.location.href = "../HTML/cadastroComplementoCuidador.html";
-    } else {
-      window.location.href = "../HTML/cadastroComplemento.html";
-    }
+    // Pequeno delay para garantir que localStorage foi salvo
+    setTimeout(() => {
+      // redireciona para complemento conforme tipo
+      if (tipoUsuario === "cuidador") {
+        window.location.href = "../HTML/cadastroComplementoCuidador.html";
+      } else {
+        window.location.href = "../HTML/cadastroComplemento.html";
+      }
+    }, 100);
   } catch (err) {
     console.error("[Cadastro] erro inesperado:", err);
     uiMsg("Erro inesperado no processo de cadastro. Veja console.", "error");

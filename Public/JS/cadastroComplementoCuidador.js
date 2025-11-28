@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('[cadastroComplementoCuidador] Formulário submetido');
 
       const existingData = JSON.parse(localStorage.getItem('cuidafast_user') || '{}');
-      if (!existingData.email) {
+      if (!existingData.email && !existingData.usuario_id && !existingData.id) {
         alert('❌ Erro: Dados do cadastro inicial não encontrados. Por favor, faça o cadastro novamente.');
         window.location.href = 'cadastro.html';
         return;
@@ -81,6 +81,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (!cpf || !dataNascimento) {
         alert('Por favor, preencha todos os campos.');
+        return;
+      }
+
+      // Obtém usuario_id (pode estar em id ou usuario_id)
+      const usuarioId = existingData.usuario_id || existingData.id;
+      
+      if (!usuarioId) {
+        alert('❌ Erro: ID do usuário não encontrado. Por favor, faça o cadastro novamente.');
+        window.location.href = 'cadastro.html';
         return;
       }
 
@@ -100,9 +109,10 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         const API_URL = window.API_CONFIG?.AUTH || "/api/auth";
         
-        // Prepara dados para envio
+        // Prepara dados para envio - IMPORTANTE: envia tipo explicitamente
         const payload = {
-          usuario_id: existingData.usuario_id || existingData.id,
+          usuario_id: usuarioId,
+          tipo: 'cuidador', // Garante que seja identificado como cuidador
           cpf: cpf.replace(/\D/g, ''), // Remove formatação
           cpf_numero: cpf.replace(/\D/g, ''),
           data_nascimento: dataNascimento,
@@ -117,11 +127,19 @@ document.addEventListener('DOMContentLoaded', function() {
           body: JSON.stringify(payload)
         });
 
-        const resData = await resp.json();
+        let resData;
+        try {
+          resData = await resp.json();
+        } catch (parseError) {
+          console.error('[cadastroComplementoCuidador] Erro ao parsear resposta:', parseError);
+          alert('Erro ao processar resposta do servidor. Tente novamente.');
+          return;
+        }
         
         if (!resp.ok) {
           console.error('[cadastroComplementoCuidador] Erro do backend:', resData);
-          alert(resData.error || resData.message || "Erro ao salvar cadastro complementar.");
+          const errorMsg = resData?.error || resData?.message || `Erro ${resp.status}: ${resp.statusText}`;
+          alert(errorMsg);
           return;
         }
 
@@ -129,15 +147,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (resData.user) {
           const userData = {
             ...updatedData,
-            usuario_id: resData.user.usuario_id || resData.user.id,
-            id: resData.user.usuario_id || resData.user.id,
-            cpf_numero: resData.user.cpf || resData.user.cpf_numero,
-            data_nascimento: resData.user.data_nascimento,
-            photo_url: resData.user.photo_url || updatedData.photo_url
+            usuario_id: resData.user.usuario_id || resData.user.id || usuarioId,
+            id: resData.user.usuario_id || resData.user.id || usuarioId,
+            cpf_numero: resData.user.cpf || resData.user.cpf_numero || cpf.replace(/\D/g, ''),
+            data_nascimento: resData.user.data_nascimento || dataNascimento,
+            photo_url: resData.user.photo_url || updatedData.photo_url,
+            tipo: resData.user.tipo || 'cuidador'
           };
           localStorage.setItem('cuidafast_user', JSON.stringify(userData));
           localStorage.setItem('cuidafast_isLoggedIn', 'true');
         } else {
+          // Se não retornou user, atualiza com os dados locais
+          updatedData.usuario_id = usuarioId;
+          updatedData.id = usuarioId;
+          updatedData.tipo = 'cuidador';
           localStorage.setItem('cuidafast_user', JSON.stringify(updatedData));
         }
 
