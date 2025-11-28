@@ -84,9 +84,11 @@
 
         // Chama o backend para login/criação
         const API_URL = window.API_CONFIG?.AUTH || "/api/auth";
+        const fullUrl = `${API_URL}/google-login`;
+        console.log('[callbackGoogleLogin] Chamando API:', fullUrl);
         
         try {
-          const resp = await fetch(`${API_URL}/google-login`, {
+          const resp = await fetch(fullUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -97,9 +99,19 @@
             })
           });
 
-          const result = await resp.json();
+          console.log('[callbackGoogleLogin] Resposta da API:', resp.status, resp.statusText);
 
-          if (resp.ok && result.user) {
+          if (!resp.ok) {
+            // Se não for OK, tentar ler o texto da resposta para debug
+            const errorText = await resp.text();
+            console.error('[callbackGoogleLogin] Erro da API:', resp.status, errorText);
+            throw new Error(`Erro ${resp.status}: ${errorText.substring(0, 100)}`);
+          }
+
+          const result = await resp.json();
+          console.log('[callbackGoogleLogin] Resultado:', result);
+
+          if (result.user) {
             // Atualiza com dados do backend
             const backendUser = {
               id: result.user.usuario_id || result.user.id,
@@ -131,13 +143,19 @@
               window.location.href = 'homeCliente.html';
             }
           } else {
-            console.warn('[callbackGoogleLogin] Backend não respondeu corretamente:', result.message);
-            alert('Erro ao fazer login: ' + (result.message || 'Erro desconhecido'));
+            console.warn('[callbackGoogleLogin] Backend não retornou user:', result);
+            alert('Erro ao fazer login: ' + (result.message || 'Resposta inválida do servidor'));
             window.location.href = '../index.html';
           }
         } catch (err) {
           console.error('[callbackGoogleLogin] Erro ao chamar backend:', err);
-          alert('Erro ao conectar com o servidor. Por favor, tente novamente.');
+          const errorMsg = err.message || 'Erro desconhecido';
+          console.error('[callbackGoogleLogin] Detalhes do erro:', {
+            message: errorMsg,
+            stack: err.stack,
+            url: fullUrl
+          });
+          alert('Erro ao conectar com o servidor: ' + errorMsg);
           window.location.href = '../index.html';
         }
 
