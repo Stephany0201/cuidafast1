@@ -49,19 +49,19 @@ export const loginGoogle = async (req, res) => {
     }
 
     // se já existe, atualiza possível foto/tipo
-    await UsuarioModel.updateGoogleData(usuario.id, {
+    await UsuarioModel.updateGoogleData(usuario.usuario_id, {
       photo_url: foto_url || usuario.photo_url,
       tipo
     });
     await UsuarioModel.updateGoogleData(
-      usuario.id, 
+      usuario.usuario_id, 
       null, // auth_uid não disponível aqui
       foto_url || usuario.photo_url
     );
     
     // Atualiza tipo se necessário
     if (tipo && usuario.tipo !== tipo) {
-      await UsuarioModel.update(usuario.id, {
+      await UsuarioModel.update(usuario.usuario_id, {
         nome: usuario.nome,
         email: usuario.email,
         telefone: usuario.telefone,
@@ -70,12 +70,12 @@ export const loginGoogle = async (req, res) => {
       });
     }
 
-    usuario = await UsuarioModel.getById(usuario.id);
+    usuario = await UsuarioModel.getById(usuario.usuario_id);
     delete usuario.senha;
 
     // atualiza último login (se você tiver função)
     if (UsuarioModel.setLastLogin) {
-      await UsuarioModel.setLastLogin(usuario.id);
+      await UsuarioModel.setLastLogin(usuario.usuario_id);
     }
 
     return res.status(200).json({
