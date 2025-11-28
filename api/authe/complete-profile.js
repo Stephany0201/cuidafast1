@@ -77,25 +77,23 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Email é obrigatório' });
     }
 
-    // auth_uid separado do id INTEGER
+    // auth_uid separado do usuario_id (INTEGER)
     if (auth_uid) {
       upsertPayload.auth_uid = auth_uid;
     }
 
-    // id INTEGER: se não houver, fallback de teste
-    if (!usuario_id || usuario_id === '') {
-      const randomTestId = Math.floor(Math.random() * 10000) + 1;
-      upsertPayload.id = randomTestId;
-      console.log('[TEST] usando ID aleatório:', randomTestId);
-    } else {
-      upsertPayload.id = Number(usuario_id);
-      if (!Number.isInteger(upsertPayload.id)) {
+    // usuario_id INTEGER (PK interna)
+    let numericUsuarioId = null;
+    if (usuario_id !== undefined && usuario_id !== null && usuario_id !== '') {
+      numericUsuarioId = Number(usuario_id);
+      if (!Number.isInteger(numericUsuarioId)) {
         return res.status(400).json({ error: 'usuario_id inválido' });
       }
+      upsertPayload.usuario_id = numericUsuarioId;
     }
 
-    // Upsert: se tiver auth_uid, usa como chave; senão id
-    const upsertKey = auth_uid ? 'auth_uid' : 'id';
+    // Upsert: prioridade de conflito -> auth_uid (quando existir) ou email (único)
+    const upsertKey = auth_uid ? 'auth_uid' : 'email';
 
     const { data, error } = await supabaseAdmin
       .from('usuario')

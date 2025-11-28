@@ -14,7 +14,7 @@ class UsuarioModel {
     const { data, error } = await supabase
       .from('usuario')
       .select('*')
-      .eq('id', id)
+      .eq('usuario_id', id)
       .single();
     
     if (error) throw error;
@@ -62,11 +62,11 @@ class UsuarioModel {
     const { data, error } = await supabase
       .from('usuario')
       .insert(insertData)
-      .select('id')
+      .select('usuario_id')
       .single();
 
     if (error) throw error;
-    return data.id;
+    return data.usuario_id;
   }
 
   static async update(id, usuario) {
@@ -85,7 +85,7 @@ class UsuarioModel {
     const { data, error } = await supabase
       .from('usuario')
       .update(updateData)
-      .eq('id', id)
+      .eq('usuario_id', id)
       .select();
 
     if (error) throw error;
@@ -129,7 +129,7 @@ class UsuarioModel {
     const { data, error } = await supabase
       .from('usuario')
       .update({ ultimo_login: new Date().toISOString() })
-      .eq('id', id)
+      .eq('usuario_id', id)
       .select();
 
     if (error) throw error;
@@ -140,7 +140,7 @@ class UsuarioModel {
     const { data, error } = await supabase
       .from('usuario')
       .update({ senha: passwordHash })
-      .eq('id', id)
+      .eq('usuario_id', id)
       .select();
 
     if (error) throw error;
@@ -172,7 +172,7 @@ class UsuarioModel {
     const { data, error } = await supabase
       .from('usuario')
       .update(updateData)
-      .eq('id', id)
+      .eq('usuario_id', id)
       .select();
 
     if (error) throw error;

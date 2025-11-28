@@ -137,12 +137,12 @@ export const login = async (req, res) => {
     const match = await bcrypt.compare(senha, user.senha);
     if (!match) return res.status(401).json({ message: 'Credenciais inválidas' });
 
-    const payload = { id: user.id, email: user.email };
+    const payload = { id: user.usuario_id, email: user.email };
     const accessToken = createAccessToken(payload);
     const refreshToken = createRefreshToken(payload);
 
-    await TokenModel.create(user.id, refreshToken);
-    await UsuarioModel.setLastLogin(user.id);
+    await TokenModel.create(user.usuario_id, refreshToken);
+    await UsuarioModel.setLastLogin(user.usuario_id);
 
     delete user.senha;
 
@@ -201,7 +201,7 @@ export const googleLogin = async (req, res) => {
     } else {
       // atualiza foto se mudou
       if (foto_url) {
-        await UsuarioModel.update(user.id, {
+        await UsuarioModel.update(user.usuario_id, {
           nome: nome || user.nome,
           email: user.email,
           telefone: user.telefone,
@@ -210,17 +210,17 @@ export const googleLogin = async (req, res) => {
         // Atualiza photo_url diretamente no banco se necessário
         // Por enquanto, apenas atualiza nome se fornecido
       }
-      user = await UsuarioModel.getById(user.id);
+      user = await UsuarioModel.getById(user.usuario_id);
     }
 
     // JWT
-    const payload = { id: user.id, email: user.email };
+    const payload = { id: user.usuario_id, email: user.email };
     const accessToken = createAccessToken(payload);
     const refreshToken = createRefreshToken(payload);
 
     // salva refresh interno
-    await TokenModel.create(user.id, refreshToken);
-    await UsuarioModel.setLastLogin(user.id);
+    await TokenModel.create(user.usuario_id, refreshToken);
+    await UsuarioModel.setLastLogin(user.usuario_id);
 
     delete user.senha;
 

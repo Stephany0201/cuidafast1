@@ -14,8 +14,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Opcional: endpoint serverless que criamos/discutimos (usado quando signUp retorna user = null).
-// Por padrão espera /api/create-or-associate-user — altere se seu endpoint for outro.
-  const SERVERLESS_CREATE_ENDPOINT = "/api/auth";
+// Usa rota proxy do backend: /api/auth/create-or-associate-user
+const SERVERLESS_CREATE_ENDPOINT = "/api/auth/create-or-associate-user";
 const SERVERLESS_SECRET_TO_SEND = ""; // opcional: se você configurou CREATE_USER_SECRET no server, coloque aqui
 
 // ---------------------- HELPERS ----------------------
@@ -157,8 +157,10 @@ async function handleFormSubmit(event) {
         const data = await response.json();
         // Supondo que seu backend responda com user object (como antes)
         const user = data.user || data;
+        const resolvedId = user.usuario_id ?? user.id;
         const userData = {
-          id: user.id,
+          id: resolvedId,
+          usuario_id: resolvedId,
           nome: user.nome || nome,
           email: user.email || email,
           telefone: user.telefone || telefone,
@@ -259,7 +261,11 @@ async function handleFormSubmit(event) {
       auth_uid: authUid
     };
 
-    const { data: newUsuario, error: errUsr } = await supabase.from("usuario").insert([insertPayload]).select("id").single();
+    const { data: newUsuario, error: errUsr } = await supabase
+      .from("usuario")
+      .insert([insertPayload])
+      .select("usuario_id")
+      .single();
 
     if (errUsr) {
       console.error("[Cadastro] erro ao inserir usuario:", errUsr);
@@ -267,7 +273,7 @@ async function handleFormSubmit(event) {
       return;
     }
 
-    const usuarioId = newUsuario.id;
+    const usuarioId = newUsuario.usuario_id;
     // cria registro em cliente ou cuidador
     if (tipoUsuario === "cuidador") {
       await supabase.from("cuidador").insert([{ usuario_id: usuarioId }]).catch((e)=>console.warn("aviso: erro inserir cuidador", e));
@@ -278,6 +284,7 @@ async function handleFormSubmit(event) {
     // login local/session: gravar localStorage
     const userData = {
       id: usuarioId,
+      usuario_id: usuarioId,
       nome,
       email,
       telefone,
