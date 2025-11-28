@@ -70,7 +70,7 @@ class UsuarioModel {
   }
 
   static async update(id, usuario) {
-    const { nome, email, telefone, data_nascimento, photo_url, tipo } = usuario;
+    const { nome, email, telefone, data_nascimento, photo_url, tipo, cpf, cpf_numero } = usuario;
     
     const updateData = {};
     if (nome !== undefined) updateData.nome = nome;
@@ -79,6 +79,15 @@ class UsuarioModel {
     if (data_nascimento !== undefined) updateData.data_nascimento = data_nascimento;
     if (photo_url !== undefined) updateData.photo_url = photo_url;
     if (tipo !== undefined) updateData.tipo = tipo;
+    
+    // Trata CPF (aceita ambos os campos)
+    const cpfValue = cpf || cpf_numero;
+    if (cpfValue !== undefined) {
+      // Remove formatação se necessário
+      const cpfLimpo = typeof cpfValue === 'string' ? cpfValue.replace(/\D/g, '') : cpfValue;
+      updateData.cpf = cpfLimpo;
+      updateData.cpf_numero = cpfLimpo;
+    }
     
     updateData.data_modificacao = new Date().toISOString();
     

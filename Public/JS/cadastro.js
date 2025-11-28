@@ -154,10 +154,31 @@ async function handleFormSubmit(event) {
 
       if (response.ok) {
         usedBackend = true;
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          console.error("[Cadastro] Erro ao parsear resposta JSON:", parseError);
+          uiMsg("Resposta do servidor inválida. Tente novamente.", "error");
+          return;
+        }
+        
         // Supondo que seu backend responda com user object (como antes)
         const user = data.user || data;
+        
+        if (!user) {
+          uiMsg("Resposta do servidor não contém dados do usuário.", "error");
+          return;
+        }
+        
         const resolvedId = user.usuario_id ?? user.id;
+        
+        if (!resolvedId) {
+          console.error("[Cadastro] Resposta do servidor não contém ID do usuário:", data);
+          uiMsg("Erro: ID do usuário não encontrado na resposta do servidor.", "error");
+          return;
+        }
+        
         const userData = {
           id: resolvedId,
           usuario_id: resolvedId,
@@ -169,9 +190,17 @@ async function handleFormSubmit(event) {
           primeiroNome: nome.split(" ")[0],
         };
 
+        // Salva accessToken se fornecido pelo backend
+        if (data.accessToken) {
+          userData.accessToken = data.accessToken;
+          localStorage.setItem("cuidafast_accessToken", data.accessToken);
+        }
+
         localStorage.setItem("cuidafast_user", JSON.stringify(userData));
         localStorage.setItem("cuidafast_isLoggedIn", "true");
 
+        console.log("[Cadastro] Usuário cadastrado com sucesso. Redirecionando...");
+        
         // redireciona conforme tipo
         if (tipoUsuario === "cuidador") {
           window.location.href = "../HTML/cadastroComplementoCuidador.html";
@@ -181,8 +210,15 @@ async function handleFormSubmit(event) {
         return;
       } else {
         // response não ok -> mostrar msg e tentar fallback se supabase configurado
-        const err = await response.json().catch(()=>({ message: 'Erro desconhecido no backend' }));
-        uiMsg(err.message || "Erro do backend ao cadastrar. Tentando fallback (Supabase)...", "error");
+        let err;
+        try {
+          err = await response.json();
+        } catch (parseError) {
+          err = { message: `Erro HTTP ${response.status}: ${response.statusText}` };
+        }
+        
+        console.error("[Cadastro] Erro do backend:", err);
+        uiMsg(err.message || err.error || `Erro do backend (${response.status}). Tentando fallback (Supabase)...`, "error");
         // não 'return' aqui: deixa passar para tentar fallback abaixo
       }
     } catch (err) {

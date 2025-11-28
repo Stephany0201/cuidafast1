@@ -116,7 +116,22 @@ export const register = async (req, res) => {
     const user = await UsuarioModel.getById(userId);
     delete user.senha;
 
-    return res.status(201).json({ user });
+    // Cria tokens para autenticação automática após cadastro
+    const payload = { id: user.usuario_id, email: user.email };
+    const accessToken = createAccessToken(payload);
+    const refreshToken = createRefreshToken(payload);
+
+    // Salva refresh token no banco
+    await TokenModel.create(user.usuario_id, refreshToken);
+
+    // Define cookie de refresh token
+    setRefreshCookie(res, refreshToken);
+
+    return res.status(201).json({ 
+      user,
+      accessToken,
+      message: 'Usuário cadastrado com sucesso'
+    });
 
   } catch (err) {
     console.error('register error', err);
