@@ -477,8 +477,9 @@ function initNotifications() {
     }
     
     // Simular atualização de notificações
-    updateNotificationCount();
-    setInterval(updateNotificationCount, 30000); // Atualizar a cada 30 segundos
+    // COMENTADO: Para manter badges zerados, não atualizar automaticamente
+    // updateNotificationCount();
+    // setInterval(updateNotificationCount, 30000); // Atualizar a cada 30 segundos
 }
 
 function updateNotificationCount() {
