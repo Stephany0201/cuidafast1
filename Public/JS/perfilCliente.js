@@ -31,24 +31,97 @@ async function loadUserProfile() {
     }
 
     // Atualizar nome principal
-    const profileName = document.querySelector('.profile-info h1');
+    const profileName = document.querySelector('.profile-info h1') || document.getElementById('profileName');
     if (profileName) {
         profileName.textContent = userData.nome;
     }
 
-    // Atualizar data de cadastro
+    // Atualizar nome no header
+    const headerUserName = document.getElementById('headerUserName');
+    if (headerUserName) {
+        const primeiroNome = userData.primeiroNome || userData.nome.split(' ')[0];
+        headerUserName.textContent = primeiroNome;
+    }
+
+    // Atualizar nome no dropdown
+    const dropdownUserName = document.getElementById('dropdownUserName');
+    if (dropdownUserName) {
+        dropdownUserName.textContent = userData.nome;
+    }
+
+    // Atualizar tipo no dropdown
+    const dropdownUserType = document.getElementById('dropdownUserType');
+    if (dropdownUserType) {
+        dropdownUserType.textContent = userData.tipo === 'cuidador' ? 'Cuidador' : 'Cliente';
+    }
+
+    // Atualizar data de cadastro - só mostrar se realmente tiver dataCadastro
     const memberSince = document.querySelector('.member-since');
-    if (memberSince && userData.dataCadastro) {
-        const date = new Date(userData.dataCadastro);
-        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        const monthName = monthNames[date.getMonth()];
-        const year = date.getFullYear();
-        
-        if (userData.tipo === 'cuidador') {
-            memberSince.textContent = `Cuidador desde ${monthName} de ${year}`;
+    if (memberSince) {
+        if (userData.dataCadastro) {
+            const date = new Date(userData.dataCadastro);
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                               'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const monthName = monthNames[date.getMonth()];
+            const year = date.getFullYear();
+            
+            if (userData.tipo === 'cuidador') {
+                memberSince.textContent = `Cuidador desde ${monthName} de ${year}`;
+            } else {
+                memberSince.textContent = `Membro desde ${monthName} de ${year}`;
+            }
+            memberSince.style.display = 'block';
         } else {
-            memberSince.textContent = `Membro desde ${monthName} de ${year}`;
+            // Conta nova - não mostrar data de cadastro
+            memberSince.style.display = 'none';
+        }
+    }
+
+    // Atualizar avaliações/estrelas - só mostrar se realmente houver avaliações
+    const profileRating = document.querySelector('.profile-rating');
+    const ratingStars = document.querySelector('#ratingStars');
+    if (profileRating && ratingStars) {
+        // Verificar se há avaliações reais (do banco ou localStorage)
+        const avaliacoes = userData.avaliacoes || userData.totalAvaliacoes || 0;
+        const rating = userData.rating || userData.avaliacaoMedia || 0;
+        
+        if (avaliacoes > 0 && rating > 0) {
+            // Tem avaliações - mostrar
+            ratingStars.innerHTML = '';
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            
+            // Adicionar estrelas preenchidas
+            for (let i = 0; i < fullStars; i++) {
+                const star = document.createElement('i');
+                star.className = 'ph ph-star-fill';
+                ratingStars.appendChild(star);
+            }
+            
+            // Adicionar meia estrela se necessário
+            if (hasHalfStar) {
+                const halfStar = document.createElement('i');
+                halfStar.className = 'ph ph-star-half-fill';
+                ratingStars.appendChild(halfStar);
+            }
+            
+            // Adicionar estrelas vazias
+            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+            for (let i = 0; i < emptyStars; i++) {
+                const star = document.createElement('i');
+                star.className = 'ph ph-star';
+                ratingStars.appendChild(star);
+            }
+            
+            // Adicionar texto com avaliação
+            const ratingText = document.createElement('span');
+            ratingText.textContent = `${rating.toFixed(1)} (${avaliacoes} avaliação${avaliacoes > 1 ? 'ões' : ''})`;
+            ratingStars.appendChild(ratingText);
+            
+            profileRating.style.display = 'block';
+        } else {
+            // Conta nova - não mostrar avaliações
+            profileRating.style.display = 'none';
         }
     }
 
