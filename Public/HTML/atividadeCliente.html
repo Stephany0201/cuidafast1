@@ -140,8 +140,8 @@
   </main>
 
   <script>
-    // Carregar nome do usuário
-    document.addEventListener('DOMContentLoaded', function() {
+    // Função para carregar nome do usuário - executa após todos os scripts
+    function loadUserName() {
       try {
         const userData = JSON.parse(localStorage.getItem('cuidafast_user') || '{}');
         
@@ -175,13 +175,32 @@
             if (headerAvatar) headerAvatar.src = photoURL;
             if (dropdownAvatar) dropdownAvatar.src = photoURL;
           }
+          
+          console.log('[AtividadeCliente] Nome do usuário carregado:', primeiroNome);
+        } else {
+          console.warn('[AtividadeCliente] Nenhum dado de usuário encontrado no localStorage');
         }
       } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
+        console.error('[AtividadeCliente] Erro ao carregar dados do usuário:', error);
       }
-    });
+    }
+
+    // Executar quando DOM estiver pronto
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadUserName);
+    } else {
+      // DOM já está pronto, executar imediatamente
+      loadUserName();
+    }
+
+    // Executar novamente após um pequeno delay para garantir que outros scripts não sobrescrevam
+    setTimeout(loadUserName, 100);
   </script>
     <script src="../JS/perfilCliente.js"></script>
     <script src="../JS/header.js"></script>
+    <script>
+      // Garantir que o nome seja carregado após todos os scripts
+      setTimeout(loadUserName, 200);
+    </script>
 </body>
 </html>
