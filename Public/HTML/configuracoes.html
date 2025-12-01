@@ -70,19 +70,19 @@
                 <!-- Notifications -->
                 <a href="notificacao.html" class="header-action-btn notification-btn active" id="notificationBtn">
                  <i class="ph ph-bell"></i>
-                  <span class="notification-badge">3</span>
+                  <span class="notification-badge" style="display: none;">0</span>
                 </a>
               
               <!-- Messages -->
                 <a href="mensagens.html" class="header-action-btn message-btn" id="messageBtn">
                   <i class="ph ph-chat-circle"></i>
-                  <span class="message-badge">2</span>
+                  <span class="message-badge" style="display: none;">0</span>
                   </a>
                 <!-- User Profile -->
                 <div class="user-profile-dropdown" id="userProfileDropdown">
                     <button class="user-profile-btn" id="userProfileBtn">
                         <img src="../assets/images.webp" alt="Avatar do usuário" class="user-avatar-img">
-                        <span class="user-name" id="headerUserName">João Silva</span>
+                        <span class="user-name" id="headerUserName">Usuário</span>
                         <i class="ph ph-caret-down dropdown-arrow"></i>
                     </button>
                     
@@ -91,8 +91,8 @@
                         <div class="dropdown-header">
                             <img src="../assets/images.webp" alt="Avatar" class="dropdown-avatar">
                             <div class="dropdown-user-info">
-                                <h4>João Silva</h4>
-                                <p>Cliente Premium</p>
+                                <h4 id="dropdownUserName">Usuário</h4>
+                                <p id="dropdownUserType">Cliente</p>
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
@@ -347,5 +347,64 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../JS/header.js"></script>
+<script>
+  // Carregar nome do usuário
+  document.addEventListener('DOMContentLoaded', function() {
+    function loadUserName() {
+      try {
+        const userData = JSON.parse(localStorage.getItem('cuidafast_user') || '{}');
+        
+        if (userData && userData.nome) {
+          const primeiroNome = userData.primeiroNome || userData.nome.split(' ')[0];
+          const nomeCompleto = userData.nome;
+          
+          // Atualizar nome no header
+          const headerUserName = document.getElementById('headerUserName');
+          if (headerUserName) {
+            headerUserName.textContent = primeiroNome;
+          }
+          
+          // Atualizar nome no dropdown
+          const dropdownUserName = document.getElementById('dropdownUserName');
+          if (dropdownUserName) {
+            dropdownUserName.textContent = nomeCompleto;
+          }
+          
+          // Atualizar tipo no dropdown
+          const dropdownUserType = document.getElementById('dropdownUserType');
+          if (dropdownUserType) {
+            dropdownUserType.textContent = userData.tipo === 'cuidador' ? 'Cuidador' : 'Cliente';
+          }
+          
+          // Atualizar foto do perfil se disponível
+          const photoURL = userData.photoURL || userData.photo_url || userData.foto_perfil;
+          if (photoURL) {
+            const headerAvatar = document.querySelector('.user-avatar-img');
+            const dropdownAvatar = document.querySelector('.dropdown-avatar');
+            if (headerAvatar) headerAvatar.src = photoURL;
+            if (dropdownAvatar) dropdownAvatar.src = photoURL;
+          }
+          
+          console.log('[Configuracoes] Nome do usuário carregado:', primeiroNome);
+        } else {
+          console.warn('[Configuracoes] Nenhum dado de usuário encontrado no localStorage');
+        }
+      } catch (error) {
+        console.error('[Configuracoes] Erro ao carregar dados do usuário:', error);
+      }
+    }
+
+    // Executar quando DOM estiver pronto
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadUserName);
+    } else {
+      loadUserName();
+    }
+
+    // Executar novamente após um delay para garantir que outros scripts não sobrescrevam
+    setTimeout(loadUserName, 100);
+    setTimeout(loadUserName, 200);
+  });
+</script>
 
 </body>
