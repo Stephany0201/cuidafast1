@@ -64,7 +64,7 @@
                 <div class="user-profile-dropdown" id="userProfileDropdown">
                     <button class="user-profile-btn" id="userProfileBtn">
                         <img src="../assets/images.webp" alt="Avatar do usuário" class="user-avatar-img">
-                        <span class="user-name" id="headerUserName">João Silva</span>
+                        <span class="user-name" id="headerUserName">Usuário</span>
                         <i class="ph ph-caret-down dropdown-arrow"></i>
                     </button>
                     
@@ -73,8 +73,8 @@
                         <div class="dropdown-header">
                             <img src="../assets/images.webp" alt="Avatar" class="dropdown-avatar">
                             <div class="dropdown-user-info">
-                                <h4>João Silva</h4>
-                                <p>Cliente Premium</p>
+                                <h4 id="dropdownUserName">Usuário</h4>
+                                <p id="dropdownUserType">Cliente</p>
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
@@ -140,16 +140,44 @@
   </main>
 
   <script>
-    const avatarDropdown = document.getElementById("avatarDropdown");
-    const dropdownMenu = document.getElementById("dropdownMenu");
-
-    avatarDropdown.addEventListener("click", () => {
-      dropdownMenu.classList.toggle("show");
-    });
-
-    window.addEventListener("click", (e) => {
-      if (!avatarDropdown.contains(e.target)) {
-        dropdownMenu.classList.remove("show");
+    // Carregar nome do usuário
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        const userData = JSON.parse(localStorage.getItem('cuidafast_user') || '{}');
+        
+        if (userData && userData.nome) {
+          const primeiroNome = userData.primeiroNome || userData.nome.split(' ')[0];
+          const nomeCompleto = userData.nome;
+          
+          // Atualizar nome no header
+          const headerUserName = document.getElementById('headerUserName');
+          if (headerUserName) {
+            headerUserName.textContent = primeiroNome;
+          }
+          
+          // Atualizar nome no dropdown
+          const dropdownUserName = document.getElementById('dropdownUserName');
+          if (dropdownUserName) {
+            dropdownUserName.textContent = nomeCompleto;
+          }
+          
+          // Atualizar tipo no dropdown
+          const dropdownUserType = document.getElementById('dropdownUserType');
+          if (dropdownUserType) {
+            dropdownUserType.textContent = userData.tipo === 'cuidador' ? 'Cuidador' : 'Cliente';
+          }
+          
+          // Atualizar foto do perfil se disponível
+          const photoURL = userData.photoURL || userData.photo_url || userData.foto_perfil;
+          if (photoURL) {
+            const headerAvatar = document.querySelector('.user-avatar-img');
+            const dropdownAvatar = document.querySelector('.dropdown-avatar');
+            if (headerAvatar) headerAvatar.src = photoURL;
+            if (dropdownAvatar) dropdownAvatar.src = photoURL;
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
       }
     });
   </script>
